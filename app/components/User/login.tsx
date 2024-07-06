@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import CustomModal from '../components/Message/CustomModal';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert ,Animated,Easing} from 'react-native';
+import CustomModal from '../../components/Message/CustomModal';
 import axios from 'axios';
-import {useNavigation} from '@react-navigation/native';
+import CustomDrawer from './CustomDrawer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const HomeScreen = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +18,27 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
 
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [drawerAnim] = useState(new Animated.Value(-250));
+    
+    const openDrawer = () => {
+      setIsDrawerOpen(true);
+      Animated.timing(drawerAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start();
+    };
+    
+    const closeDrawer = () => {
+      Animated.timing(drawerAnim, {
+        toValue: -250,
+        duration: 300,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start(() => setIsDrawerOpen(false));
+    };
   const handleChange = (name: string, value: string) => {
     setFormData({
       ...formData,
@@ -72,7 +93,6 @@ const HomeScreen = () => {
 
             console.log('Token:', token);
             console.log('UserId:', userId);
-
             if (token && userId) {
                 await AsyncStorage.setItem('token', token); // Store token in AsyncStorage
                 await AsyncStorage.setItem('userId', userId); // Store userId in AsyncStorage
@@ -94,6 +114,9 @@ const HomeScreen = () => {
 
   return (
     <>
+    <TouchableOpacity style={styles.drawerButton} onPress={openDrawer}>
+        <Text style={styles.buttonText}>Menu</Text>
+      </TouchableOpacity>
       <View style={styles.container}>
         {/* <View style={styles.halfContainer}>
           <View style={styles.innerContainer}>
@@ -157,6 +180,10 @@ const HomeScreen = () => {
         message={modalMessage}
         onClose={() => setModalVisible(false)}
       />
+      <Animated.View style={[styles.drawerWrapper, { transform: [{ translateX: drawerAnim }] }]}>
+        <CustomDrawer isOpen={isDrawerOpen} closeDrawer={closeDrawer} />
+      </Animated.View>
+
     </>
   );
 };
@@ -207,8 +234,24 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: 'white',
+    color: 'black',
     fontWeight: 'bold',
+  },
+  drawerButton: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderBottomWidth:1,
+    borderColor:'black',
+    alignItems: 'center',
+    marginTop: 0,
+  },
+  drawerWrapper: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 250,
+    zIndex: 1000,
   },
 });
 

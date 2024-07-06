@@ -1,10 +1,12 @@
+// src/screens/LoginScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import CustomModal from '../components/Message/CustomModal';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import CustomModal from '../../components/Message/CustomModal';
+import CustomDrawer from './CustomDrawer';
 import axios from 'axios';
-import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const HomeScreen = () => {
+
+const login = () => {
   const [formData, setFormData] = useState({
     createName: '',
     createEmail: '',
@@ -12,55 +14,25 @@ const HomeScreen = () => {
     loginEmail: '',
     loginPassword: '',
   });
-  const[email,setEmail] = useState();
-  const[passowrd,setPassword] = useState();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerAnim] = useState(new Animated.Value(-250));
 
-  const handleChange = (name: string, value: string) => {
+  const handleChange = (name:string, value:string) => {
     setFormData({
       ...formData,
       [name]: value,
     });
   };
 
-  const handleCreateAccount = async () => {
-    try {
-      const response = await fetch('http://192.168.1.4:3000/api/users/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullname: formData.createName,
-          email: formData.createEmail,
-          password: formData.createPassword,
-        }),
-      });
-  
-      console.log('Response status:', response.status);
-  
-      if (response.status === 200) {
-        setModalMessage('Account created successfully');
-      } else {
-        setModalMessage('Failed to create account');
-      }
-    } catch (error) {
-      console.error('Error creating account:', error);
-      setModalMessage('Failed to create account');
-    } finally {
-      setModalVisible(true);
-    }
-  };
-  
-
   const handleLogin = async () => {
     console.log(formData.loginEmail, formData.loginPassword);
     const userData = { email: formData.loginEmail, password: formData.loginPassword };
 
     try {
-        const response = await axios.post('http://192.168.1.4:3000/api/users/login', userData, {
+        const response = await axios.post('http://192.0.0.2:3000/api/manufacturer/login', userData, {
             headers: {
                 'Content-Type': 'application/json',
             }
@@ -68,14 +40,14 @@ const HomeScreen = () => {
 
         if (response.status === 200) {
             const token = response.data.token; // Adjust based on actual response structure
-            const userId = response.data.id; // Assuming the API response includes userId
+            const manuId = response.data.manu_id; // Assuming the API response includes userId
 
             console.log('Token:', token);
-            console.log('UserId:', userId);
+            console.log('manufacturerId:', manuId);
 
-            if (token && userId) {
+            if (token && manuId) {
                 await AsyncStorage.setItem('token', token); // Store token in AsyncStorage
-                await AsyncStorage.setItem('userId', userId); // Store userId in AsyncStorage
+                await AsyncStorage.setItem('manufacturerId', manuId); // Store userId in AsyncStorage
                 setModalMessage('Login successfully');
             } else {
                 setModalMessage('Failed to Login: Token or userId not received');
@@ -89,48 +61,45 @@ const HomeScreen = () => {
     } finally {
         setModalVisible(true); // Show modal after login attempt
     }
-};
+  };
 
+  const openDrawer = () => {
+    setIsDrawerOpen(true);
+    Animated.timing(drawerAnim, {
+      toValue: 0,
+      duration: 300,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const closeDrawer = () => {
+    Animated.timing(drawerAnim, {
+      toValue: -250,
+      duration: 300,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: false,
+    }).start(() => setIsDrawerOpen(false));
+  };
+  // const clearAllData = async () => {
+  //   try {
+  //     await AsyncStorage.clear();
+  //     console.log('Cleared all AsyncStorage data.');
+  //   } catch (e) {
+  //     console.error('Failed to clear AsyncStorage.');
+  //   }
+  // };
+  // clearAllData();
 
   return (
     <>
+    <TouchableOpacity style={styles.drawerButton} onPress={openDrawer}>
+        <Text style={styles.buttonText}>Menu</Text>
+      </TouchableOpacity>
       <View style={styles.container}>
-        {/* <View style={styles.halfContainer}>
-          <View style={styles.innerContainer}>
-            <Text style={styles.headerText}>
-              Welcome to <Text style={styles.highlightText}>Scatch</Text>
-            </Text>
-            <Text style={styles.subHeaderText}>Create your account</Text>
-            <View>
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                value={formData.createName}
-                onChangeText={(value) => handleChange('createName', value)}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={formData.createEmail}
-                onChangeText={(value) => handleChange('createEmail', value)}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                value={formData.createPassword}
-                onChangeText={(value) => handleChange('createPassword', value)}
-              />
-              <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
-                <Text style={styles.buttonText}>Create My Account</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View> */}
-        
         <View style={styles.halfContainer}>
           <View style={styles.innerContainer}>
-            <Text style={styles.subHeaderText}>Login to your User account</Text>
+            <Text style={styles.subHeaderText}>Login to your Manufacturer account</Text>
             <View>
               <TextInput
                 style={styles.input}
@@ -157,6 +126,10 @@ const HomeScreen = () => {
         message={modalMessage}
         onClose={() => setModalVisible(false)}
       />
+      
+      <Animated.View style={[styles.drawerWrapper, { transform: [{ translateX: drawerAnim }] }]}>
+        <CustomDrawer isOpen={isDrawerOpen} closeDrawer={closeDrawer} />
+      </Animated.View>
     </>
   );
 };
@@ -207,9 +180,25 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: 'white',
+    color: 'black',
     fontWeight: 'bold',
+  },
+  drawerButton: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderBottomWidth:1,
+    borderColor:'black',
+    alignItems: 'center',
+    marginTop: 0,
+  },
+  drawerWrapper: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 250,
+    zIndex: 1000,
   },
 });
 
-export default HomeScreen;
+export default login;
