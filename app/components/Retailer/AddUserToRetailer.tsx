@@ -74,15 +74,15 @@ const AddUserToRetailer = () => {
       </TouchableOpacity>
         <View style={styles.container}>
             <View style={styles.formContainer}>
-                <Text style={styles.title}>Add User to Retailer</Text>
+                <Text style={styles.title}>Add New Plumber</Text>
                 <TextInput
                     style={styles.input}
                     value={email}
                     onChangeText={(text) => setEmail(text)}
-                    placeholder="Enter user email"
+                    placeholder="Enter Plumber email"
                 />
                 <TouchableOpacity style={styles.button} onPress={handleAddUser}>
-                    <Text style={styles.buttonText}>Add User</Text>
+                    <Text style={styles.buttonText}>Add Plumber</Text>
                 </TouchableOpacity>
                 {message && (
                     <View style={styles.messageContainer}>

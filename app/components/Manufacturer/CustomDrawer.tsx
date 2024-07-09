@@ -12,7 +12,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, closeDrawer }) => {
   return (
     <View style={[styles.drawerContainer, isOpen ? styles.open : styles.closed]}>
       <TouchableOpacity onPress={closeDrawer}>
-        <Text style={styles.closeButton}>X</Text>
+        <Text style={styles.closeButton}>&#10006;</Text>
       </TouchableOpacity>
       <Link href="/components/Manufacturer/Dashboard" style={styles.link}>
         <Text style={styles.linkText}>Transfer Points</Text>
@@ -24,6 +24,10 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, closeDrawer }) => {
       <View style={styles.divider} />
       <Link href="/components/Manufacturer/User_redemption_request" style={styles.link}>
         <Text style={styles.linkText}>Approve Plumber Redeem</Text>
+      </Link>
+      <View style={styles.divider} />
+      <Link href="/components/Manufacturer/transaction" style={styles.link}>
+        <Text style={styles.linkText}>Transactions</Text>
       </Link>
       <View style={styles.divider} />
     </View>

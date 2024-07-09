@@ -54,7 +54,7 @@ const userpoints = () => {
                 console.error('No token found');
                 return;
             }
-            const response = await axios.get('http://192.168.1.4:3000/api/users/points', {
+            const response = await axios.get('http://192.0.0.2:3000/api/users/points', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

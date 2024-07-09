@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,Animated,Easing } from 'react-native';
 import CustomModal from '../components/Message/CustomModal';
 import axios from 'axios';
-import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomDrawer from '../components/User/CustomDrawer';
 const HomeScreen = () => {
   const [formData, setFormData] = useState({
     createName: '',
@@ -12,11 +12,31 @@ const HomeScreen = () => {
     loginEmail: '',
     loginPassword: '',
   });
-  const[email,setEmail] = useState();
-  const[passowrd,setPassword] = useState();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerAnim] = useState(new Animated.Value(-250));
+  
+  const openDrawer = () => {
+    setIsDrawerOpen(true);
+    Animated.timing(drawerAnim, {
+      toValue: 0,
+      duration: 300,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  };
+  
+  const closeDrawer = () => {
+    Animated.timing(drawerAnim, {
+      toValue: -250,
+      duration: 300,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: false,
+    }).start(() => setIsDrawerOpen(false));
+  };
 
   const handleChange = (name: string, value: string) => {
     setFormData({
@@ -60,7 +80,7 @@ const HomeScreen = () => {
     const userData = { email: formData.loginEmail, password: formData.loginPassword };
 
     try {
-        const response = await axios.post('http://192.168.1.4:3000/api/users/login', userData, {
+        const response = await axios.post('http://192.0.0.2:3000/api/users/login', userData, {
             headers: {
                 'Content-Type': 'application/json',
             }
@@ -92,124 +112,175 @@ const HomeScreen = () => {
 };
 
 
-  return (
-    <>
-      <View style={styles.container}>
-        {/* <View style={styles.halfContainer}>
-          <View style={styles.innerContainer}>
-            <Text style={styles.headerText}>
-              Welcome to <Text style={styles.highlightText}>Scatch</Text>
-            </Text>
-            <Text style={styles.subHeaderText}>Create your account</Text>
-            <View>
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                value={formData.createName}
-                onChangeText={(value) => handleChange('createName', value)}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={formData.createEmail}
-                onChangeText={(value) => handleChange('createEmail', value)}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                value={formData.createPassword}
-                onChangeText={(value) => handleChange('createPassword', value)}
-              />
-              <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
-                <Text style={styles.buttonText}>Create My Account</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View> */}
-        
-        <View style={styles.halfContainer}>
-          <View style={styles.innerContainer}>
-            <Text style={styles.subHeaderText}>Login to your User account</Text>
-            <View>
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={formData.loginEmail}
-                onChangeText={(value) => handleChange('loginEmail', value)}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                value={formData.loginPassword}
-                onChangeText={(value) => handleChange('loginPassword', value)}
-              />
-              <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Login</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+return (
+  <>
+    <TouchableOpacity style={styles.drawerButton} onPress={openDrawer}>
+      <Text style={styles.drawerButtonText}>☰</Text>
+    </TouchableOpacity>
+
+    <View style={styles.container}>
+      <View style={styles.formContainer}>
+        <Text style={styles.headerText}>Welcome to <Text style={styles.highlightText}>Scatch</Text></Text>
+
+        <View style={styles.section}>
+          <Text style={styles.subHeaderText}>Create User Account</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            value={formData.createName}
+            onChangeText={(value) => handleChange('createName', value)}
+            placeholderTextColor="#6c757d"
+            selectionColor="#007bff"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={formData.createEmail}
+            onChangeText={(value) => handleChange('createEmail', value)}
+            placeholderTextColor="#6c757d"
+            selectionColor="#007bff"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry
+            value={formData.createPassword}
+            onChangeText={(value) => handleChange('createPassword', value)}
+            placeholderTextColor="#6c757d"
+            selectionColor="#007bff"
+          />
+          <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
+            <Text style={styles.buttonText}>Create Account</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.subHeaderText}>Login to Your Account</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={formData.loginEmail}
+            onChangeText={(value) => handleChange('loginEmail', value)}
+            placeholderTextColor="#6c757d"
+            selectionColor="#007bff"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry
+            value={formData.loginPassword}
+            onChangeText={(value) => handleChange('loginPassword', value)}
+            placeholderTextColor="#6c757d"
+            selectionColor="#007bff"
+          />
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Login</Text>
+          </TouchableOpacity>
+          {/* <Link href='/components/Retailer/createRetailer'>
+            <ThemedText type="link" style={styles.createAccountLink}>Create Account</ThemedText>
+          </Link> */}
         </View>
       </View>
-      <CustomModal
-        visible={modalVisible}
-        message={modalMessage}
-        onClose={() => setModalVisible(false)}
-      />
-    </>
-  );
+    </View>
+
+    <CustomModal
+      visible={modalVisible}
+      message={modalMessage}
+      onClose={() => setModalVisible(false)}
+    />
+
+    <Animated.View style={[styles.drawerWrapper, { transform: [{ translateX: drawerAnim }] }]}>
+      <CustomDrawer isOpen={isDrawerOpen} closeDrawer={closeDrawer} />
+    </Animated.View>
+  </>
+);
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-    padding: 20,
-    backgroundColor:'#fff',
-  },
-  halfContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  innerContainer: {
-    width: '100%',
-    paddingHorizontal: 32,
-  },
-  headerText: {
-    fontSize: 32,
-    marginBottom: 5,
-  },
-  highlightText: {
-    color: 'blue',
-    fontWeight: 'bold',
-  },
-  subHeaderText: {
-    fontSize: 24,
-    marginBottom: 20,
-  },
-  input: {
-    backgroundColor: '#fff',
-    color:'#000',
-    width: '100%',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: 'blue',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  button: {
-    backgroundColor: 'blue',
-    padding: 15,
-    borderRadius: 25,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
+container: {
+  flex: 1,
+  backgroundColor: '#F3F4F6',
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingHorizontal: 20,
+},
+formContainer: {
+  width: '100%',
+  maxWidth: 400,
+  backgroundColor: '#FFFFFF',
+  borderRadius: 12,
+  padding: 20,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  elevation: 5,
+},
+headerText: {
+  fontSize: 28,
+  fontWeight: '700',
+  textAlign: 'center',
+  marginBottom: 20,
+  color: '#111827',
+},
+highlightText: {
+  color: '#007BFF',
+},
+section: {
+  marginBottom: 20,
+},
+subHeaderText: {
+  fontSize: 22,
+  fontWeight: '600',
+  marginBottom: 10,
+  textAlign: 'center',
+  color: '#4B5563',
+},
+input: {
+  backgroundColor: '#F9FAFB',
+  color: '#333',
+  padding: 12,
+  borderRadius: 8,
+  marginBottom: 10,
+  borderWidth: 1,
+  borderColor: 'grey',
+},
+button: {
+  backgroundColor: '#007BFF',
+  padding: 15,
+  borderRadius: 8,
+  alignItems: 'center',
+  marginTop: 10,
+},
+buttonText: {
+  color: '#FFFFFF',
+  fontWeight: '600',
+  fontSize: 16,
+},
+createAccountLink: {
+  textAlign: 'center',
+  marginTop: 10,
+  color: '#007BFF',
+},
+drawerButton: {
+  position: 'absolute',
+  top: 40,
+  left: 20,
+  zIndex: 10,
+  padding: 10,
+},
+drawerButtonText: {
+  fontSize: 24,
+  color: '#007BFF',
+},
+drawerWrapper: {
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  left: 0,
+  width: 300,
+  zIndex: 1000,
+},
 });
 
 export default HomeScreen;

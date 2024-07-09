@@ -1,24 +1,60 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
-import CustomModal from '../../components/Message/CustomModal';
-import CustomDrawer from './CustomDrawer';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ThemedText } from '@/components/ThemedText';
-import { Link } from 'expo-router';
+import CustomModal from '../components/Message/CustomModal';
+import CustomDrawer from '../components/Manufacturer/CustomDrawer';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Retailer = () => {
+const LoginScreen = () => {
   const [formData, setFormData] = useState({
-    createName: '',
-    createEmail: '',
-    createPassword: '',
     loginEmail: '',
     loginPassword: '',
   });
+
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerAnim] = useState(new Animated.Value(-300));
+  
+
+  const handleChange = (name:string, value:string) => {
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleLogin = async () => {
+    const userData = { email: formData.loginEmail, password: formData.loginPassword };
+
+    try {
+      const response = await axios.post('http://192.0.0.2:3000/api/manufacturer/login', userData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        const token = response.data.token;
+        const manuId = response.data.manu_id;
+
+        if (token && manuId) {
+          await AsyncStorage.setItem('token', token);
+          await AsyncStorage.setItem('manufacturerId', manuId);
+          setModalMessage('Login successfully');
+        } else {
+          setModalMessage('Failed to Login: Token or userId not received');
+        }
+      } else {
+        setModalMessage('Failed to Login: Invalid response status');
+      }
+    } catch (error) {
+      console.error('Error logging in:', error);
+      setModalMessage('Failed to Login: Server error');
+    } finally {
+      setModalVisible(true);
+    }
+  };
 
   const openDrawer = () => {
     setIsDrawerOpen(true);
@@ -39,71 +75,7 @@ const Retailer = () => {
     }).start(() => setIsDrawerOpen(false));
   };
 
-  const handleChange = (name: string, value: string) => {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleCreateAccount = async () => {
-    try {
-      const response = await fetch('http://192.168.1.4:3000/api/retailer/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullname: formData.createName,
-          email: formData.createEmail,
-          password: formData.createPassword,
-        }),
-      });
-
-      if (response.status === 200) {
-        setModalMessage('Account created successfully');
-      } else {
-        setModalMessage('Failed to create account');
-      }
-    } catch (error) {
-      console.error('Error creating account:', error);
-      setModalMessage('Failed to create account');
-    } finally {
-      setModalVisible(true);
-    }
-  };
-
-  const handleLogin = async () => {
-    const userData = { email: formData.loginEmail, password: formData.loginPassword };
-
-    try {
-      const response = await axios.post('http://192.0.0.2:3000/api/retailer/login', userData, {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (response.status === 200) {
-        const { token, id: retailerId } = response.data;
-
-        if (token && retailerId) {
-          await AsyncStorage.setItem('token', token);
-          await AsyncStorage.setItem('retailerId', retailerId);
-          setModalMessage('Login successfully');
-        } else {
-          setModalMessage('Failed to Login: Token or userId not received');
-        }
-      } else {
-        setModalMessage('Failed to Login: Invalid response status');
-      }
-    } catch (error) {
-      console.error('Error logging in:', error);
-      setModalMessage('Failed to Login: Server error');
-    } finally {
-      setModalVisible(true);
-    }
-  };
-
+ 
   return (
     <>
       <TouchableOpacity style={styles.drawerButton} onPress={openDrawer}>
@@ -115,39 +87,7 @@ const Retailer = () => {
           <Text style={styles.headerText}>Welcome to <Text style={styles.highlightText}>Scatch</Text></Text>
 
           <View style={styles.section}>
-            <Text style={styles.subHeaderText}>Create Retailer Account</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              value={formData.createName}
-              onChangeText={(value) => handleChange('createName', value)}
-              placeholderTextColor="#6c757d"
-              selectionColor="#007bff"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={formData.createEmail}
-              onChangeText={(value) => handleChange('createEmail', value)}
-              placeholderTextColor="#6c757d"
-              selectionColor="#007bff"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              secureTextEntry
-              value={formData.createPassword}
-              onChangeText={(value) => handleChange('createPassword', value)}
-              placeholderTextColor="#6c757d"
-              selectionColor="#007bff"
-            />
-            <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
-              <Text style={styles.buttonText}>Create Account</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.subHeaderText}>Login to Your Account</Text>
+            <Text style={styles.subHeaderText}>Login to Your Manufacturer Account</Text>
             <TextInput
               style={styles.input}
               placeholder="Email"
@@ -168,9 +108,6 @@ const Retailer = () => {
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
               <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
-            <Link href='/components/Retailer/createRetailer'>
-              <ThemedText type="link" style={styles.createAccountLink}>Create Account</ThemedText>
-            </Link>
           </View>
         </View>
       </View>
@@ -235,7 +172,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: 'slate',
+    borderColor: '#ced4da',
   },
   button: {
     backgroundColor: '#007BFF',
@@ -248,11 +185,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
-  },
-  createAccountLink: {
-    textAlign: 'center',
-    marginTop: 10,
-    color: '#007BFF',
   },
   drawerButton: {
     position: 'absolute',
@@ -275,4 +207,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Retailer;
+export default LoginScreen;

@@ -22,7 +22,7 @@ const RedemptionRequests = () => {
             try {
                 const token = await AsyncStorage.getItem('token');
                 if (!token) {
-                    setMessage('No token or retailerId found');
+                    setMessage('No token or manufacturerId found');
                     return;
                 }
 

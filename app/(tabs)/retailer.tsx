@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
-import CustomModal from '../../components/Message/CustomModal';
-import CustomDrawer from './CustomDrawer';
+import CustomModal from '../components/Message/CustomModal';
+import CustomDrawer from '../components/Retailer/CustomDrawer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
 import { Link } from 'expo-router';
