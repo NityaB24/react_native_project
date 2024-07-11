@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity,Animated,Easing } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity, Animated, Easing } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomDrawer from './CustomDrawer';
@@ -27,7 +27,7 @@ const User_redemption_request = () => {
                     return;
                 }
 
-                const response = await axios.get(`http://192.0.0.2:3000/api/manufacturer/users/all-requests`, {
+                const response = await axios.get('http://192.0.0.2:3000/api/manufacturer/users/all-requests', {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -50,11 +50,17 @@ const User_redemption_request = () => {
             'Enter the coupon code to approve the redemption:',
             async (couponCode) => {
                 if (!couponCode) {
+                    setMessage('Coupon code is required');
                     return;
                 }
 
                 try {
                     const token = await AsyncStorage.getItem('token');
+                    if (!token) {
+                        setMessage('Token not found');
+                        return;
+                    }
+
                     const response = await axios.post(
                         'http://192.0.0.2:3000/api/manufacturer/user-approve-redemption',
                         {
@@ -72,15 +78,20 @@ const User_redemption_request = () => {
                     setMessage(response.data.message);
                     setRequests(requests.filter((request) => request._id !== redemptionRequestId));
                 } catch (error) {
-                    console.error('Error approving redemption:', error);
-                    setMessage('Error approving redemption');
+                    if (error) {
+                        console.error('Error approving redemption:', error);
+                        setMessage(`Error approving redemption: ${error}`);
+                    } else {
+                        console.error('Error approving redemption:', error);
+                        setMessage('Error approving redemption');
+                    }
                 }
             }
         );
     };
 
     const updateRequestList = (redemptionRequestId: string) => {
-        setRequests(requests.filter(request => request._id !== redemptionRequestId));
+        setRequests(requests.filter((request) => request._id !== redemptionRequestId));
     };
 
     const format12Hour = (dateString: string) => {
@@ -110,54 +121,55 @@ const User_redemption_request = () => {
         }
         return null;
     };
+
     const openDrawer = () => {
         setIsDrawerOpen(true);
         Animated.timing(drawerAnim, {
-          toValue: 0,
-          duration: 300,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
+            toValue: 0,
+            duration: 300,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
         }).start();
-      };
-    
-      const closeDrawer = () => {
+    };
+
+    const closeDrawer = () => {
         Animated.timing(drawerAnim, {
-          toValue: -250,
-          duration: 300,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
+            toValue: -250,
+            duration: 300,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
         }).start(() => setIsDrawerOpen(false));
-      };
+    };
 
     return (
         <>
-        <TouchableOpacity style={styles.drawerButton} onPress={openDrawer}>
-        <Text style={styles.buttonText}>Menu</Text>
-      </TouchableOpacity>
-        <View style={styles.container}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Plumber Redeem Requests</Text>
-                {message ? (
-                    <View style={styles.messageContainer}>
-                        <Text style={styles.message}>{message}</Text>
-                    </View>
-                ) : (
-                    <ScrollView contentContainerStyle={styles.list}>
-                        {requests.map((request) => (
-                            <View key={request._id} style={styles.requestItem}>
-                                <Text style={styles.methodText}>{request.method}</Text>
-                                <Text style={styles.pointsText}>Points: {request.points}</Text>
-                                <Text style={styles.dateText}>Date Requested: {format12Hour(request.dateRequested)}</Text>
-                                {renderActionButton(request)}
-                            </View>
-                        ))}
-                    </ScrollView>
-                )}
+            <TouchableOpacity style={styles.drawerButton} onPress={openDrawer}>
+                <Text style={styles.buttonText}>Menu</Text>
+            </TouchableOpacity>
+            <View style={styles.container}>
+                <View style={styles.innerContainer}>
+                    <Text style={styles.title}>Plumber Redeem Requests</Text>
+                    {message ? (
+                        <View style={styles.messageContainer}>
+                            <Text style={styles.message}>{message}</Text>
+                        </View>
+                    ) : (
+                        <ScrollView contentContainerStyle={styles.list}>
+                            {requests.map((request) => (
+                                <View key={request._id} style={styles.requestItem}>
+                                    <Text style={styles.methodText}>{request.method}</Text>
+                                    <Text style={styles.pointsText}>Points: {request.points}</Text>
+                                    <Text style={styles.dateText}>Date Requested: {format12Hour(request.dateRequested)}</Text>
+                                    {renderActionButton(request)}
+                                </View>
+                            ))}
+                        </ScrollView>
+                    )}
+                </View>
             </View>
-        </View>
-        <Animated.View style={[styles.drawerWrapper, { transform: [{ translateX: drawerAnim }] }]}>
-        <CustomDrawer isOpen={isDrawerOpen} closeDrawer={closeDrawer} />
-      </Animated.View>
+            <Animated.View style={[styles.drawerWrapper, { transform: [{ translateX: drawerAnim }] }]}>
+                <CustomDrawer isOpen={isDrawerOpen} closeDrawer={closeDrawer} />
+            </Animated.View>
         </>
     );
 };
@@ -181,9 +193,9 @@ const styles = StyleSheet.create({
         elevation: 5,
         width: '100%',
         maxWidth: 600,
-        borderWidth:1,
-        borderColor:'black',
-        marginTop:30,
+        borderWidth: 1,
+        borderColor: 'black',
+        marginTop: 30,
     },
     title: {
         fontSize: 28,
@@ -205,19 +217,17 @@ const styles = StyleSheet.create({
     },
     list: {
         paddingVertical: 10,
-        
     },
     requestItem: {
         flexDirection: 'column',
         alignItems: 'flex-start',
         paddingVertical: 16,
         paddingHorizontal: 20,
-
         backgroundColor: '#fafafa',
         borderRadius: 12,
         marginBottom: 10,
-        borderWidth:1,
-        borderColor:'grey',
+        borderWidth: 1,
+        borderColor: 'grey',
     },
     methodText: {
         fontSize: 18,
@@ -251,24 +261,23 @@ const styles = StyleSheet.create({
     drawerButton: {
         backgroundColor: 'white',
         padding: 15,
-        borderBottomWidth:1,
-        borderColor:'black',
+        borderBottomWidth: 1,
+        borderColor: 'black',
         alignItems: 'center',
         marginTop: 0,
-      },
-      drawerWrapper: {
+    },
+    drawerWrapper: {
         position: 'absolute',
         top: 0,
         bottom: 0,
         left: 0,
         width: 250,
         zIndex: 1000,
-      },
-      buttonText: {
+    },
+    buttonText: {
         color: 'black',
         fontWeight: 'bold',
-      },
+    },
 });
-
 
 export default User_redemption_request;

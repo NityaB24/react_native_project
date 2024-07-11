@@ -35,7 +35,7 @@ const TransferPointsToUser = () => {
         setLoading(true);
 
         try {
-            await axios.post('http://192.168.1.4:3000/api/retailer/transfer-points', {
+            await axios.post('http://192.0.0.2:3000/api/retailer/transfer-points', {
                 retailerId,
                 userId,
                 points: parseInt(points),

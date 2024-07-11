@@ -60,8 +60,8 @@ const styles = StyleSheet.create({
   closeButton: {
     fontSize: 24,
     // marginTop:10,
-    alignSelf: 'flex-end',
-    // marginTop:40,
+    alignSelf: 'flex-start',
+    marginTop:20,
   },
   link: {
     marginVertical: 10,

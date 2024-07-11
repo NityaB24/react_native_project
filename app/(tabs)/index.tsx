@@ -47,7 +47,7 @@ const HomeScreen = () => {
 
   const handleCreateAccount = async () => {
     try {
-      const response = await fetch('http://192.168.1.4:3000/api/users/register', {
+      const response = await fetch('http://192.0.0.2:3000/api/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

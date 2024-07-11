@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import axios from 'axios';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -31,7 +31,7 @@ const TransferPointsToRetailer = () => {
             }
 
             const response = await axios.post(
-                'http://exp://127.0.0.1:8081:3000/api/manufacturer/transfer-points',
+                'http://192.0.0.2:3000/api/manufacturer/transfer-points',
                 {
                     retailerId,
                     points: parseInt(points),
@@ -48,6 +48,7 @@ const TransferPointsToRetailer = () => {
             if (response.status === 200) {
                 setSuccessMessage('Points transferred successfully!');
                 setError(null);
+                Alert.alert("Success", "Points transferred successfully!");
             } else {
                 setError('Failed to transfer points');
             }
@@ -61,13 +62,13 @@ const TransferPointsToRetailer = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Transfer Points to Retailer</Text>
+            <Text style={styles.title}>Transfer Points</Text>
             {error && <Text style={styles.error}>{error}</Text>}
             {successMessage && <Text style={styles.success}>{successMessage}</Text>}
             <View style={styles.inputContainer}>
                 <Text style={styles.label}>Retailer ID</Text>
                 <TextInput
-                    style={styles.input}
+                    style={[styles.input, styles.disabledInput]}
                     value={retailerId}
                     editable={false}
                 />
@@ -80,6 +81,7 @@ const TransferPointsToRetailer = () => {
                     value={points}
                     onChangeText={setPoints}
                     keyboardType="numeric"
+                    placeholder="Enter points"
                 />
             </View>
             <View style={styles.inputContainer}>
@@ -88,6 +90,7 @@ const TransferPointsToRetailer = () => {
                     style={styles.input}
                     value={invoiceNumber}
                     onChangeText={setInvoiceNumber}
+                    placeholder="Enter invoice number"
                 />
             </View>
             <View style={styles.inputContainer}>
@@ -97,15 +100,16 @@ const TransferPointsToRetailer = () => {
                     value={billAmount}
                     onChangeText={setBillAmount}
                     keyboardType="numeric"
+                    placeholder="Enter bill amount"
                 />
             </View>
-            <Button
-                title={loading ? 'Transferring...' : 'Transfer Points'}
+            <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
                 onPress={handleSubmit}
                 disabled={loading}
-                color="#1f2937"
-            />
-            {loading && <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />}
+            >
+                {loading ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={styles.buttonText}>Transfer Points</Text>}
+            </TouchableOpacity>
         </View>
     );
 };
@@ -114,25 +118,29 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#ECEFF1',
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 16,
+        fontSize: 26,
+        fontWeight: '600',
+        color: '#37474F',
+        marginBottom: 24,
         textAlign: 'center',
+        borderBottomColor: '#CFD8DC',
+        borderBottomWidth: 1,
+        paddingBottom: 10,
     },
     error: {
-        backgroundColor: '#f8d7da',
-        color: '#721c24',
+        backgroundColor: '#FFCDD2',
+        color: '#D32F2F',
         padding: 10,
         borderRadius: 4,
         marginBottom: 10,
         textAlign: 'center',
     },
     success: {
-        backgroundColor: '#d4edda',
-        color: '#155724',
+        backgroundColor: '#C8E6C9',
+        color: '#388E3C',
         padding: 10,
         borderRadius: 4,
         marginBottom: 10,
@@ -143,18 +151,36 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 16,
-        fontWeight: 'bold',
+        color: '#607D8B',
         marginBottom: 8,
     },
     input: {
-        height: 40,
-        borderColor: '#ccc',
+        height: 48,
+        borderColor: '#B0BEC5',
         borderWidth: 1,
-        borderRadius: 4,
+        borderRadius: 8,
         padding: 10,
+        backgroundColor: '#FFFFFF',
+        fontSize: 16,
     },
-    loader: {
+    disabledInput: {
+        backgroundColor: '#ECEFF1',
+    },
+    button: {
+        backgroundColor: 'blue',
+        paddingVertical: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
         marginTop: 20,
+    },
+    buttonDisabled: {
+        backgroundColor: '#FFA726',
+    },
+    buttonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

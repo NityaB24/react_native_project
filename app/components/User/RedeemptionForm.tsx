@@ -53,7 +53,7 @@ const RedemptionForm = () => {
                 return;
             }
 
-            const res = await axios.post('http://192.168.1.4:3000/api/users/request-redemption', {
+            const res = await axios.post('http://192.0.0.2:3000/api/users/request-redemption', {
                 userId,
                 points,
                 method
