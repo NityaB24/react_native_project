@@ -14,7 +14,7 @@ const AddUserToRetailer = () => {
     useEffect(() => {
         const checkTokenAndUserId = async () => {
             const token = await AsyncStorage.getItem("token");
-            const retailerId = await AsyncStorage.getItem('retailerId');
+            const retailerId = await AsyncStorage.getItem('loggedId');
             
             if (!token || !retailerId) {
                 console.error('No token or userId found');
@@ -47,30 +47,30 @@ const AddUserToRetailer = () => {
         try {
             setLoading(true);
             const token = await AsyncStorage.getItem("token");
-            const retailerId = await AsyncStorage.getItem('retailerId');
+            const retailerId = await AsyncStorage.getItem('loggedId');
             if (!token || !retailerId) {
                 setMessage('No token or retailerId found');
                 return;
             }
-            const response = await axios.post('http://192.0.0.2:3000/api/retailer/addusers', { retailerId, email }, {
+            const response = await axios.post('http://192.168.29.101:3000/api/retailer/addusers', { retailerId, email }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
-            setMessage(`User added successfully: ${response.data.user.email}`);
-            Alert.alert('Success', `User added successfully: ${response.data.user.email}`);
+            setMessage(`Plumber added successfully: ${response.data.user.email}`);
+            // Alert.alert('Success', `User added successfully: ${response.data.user.email}`);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             
-            Alert.alert('Error');
+            Alert.alert('Error Occurred:\n Please check the entered mail ID');
         }
     };
 
     return (
         <>
         <TouchableOpacity style={styles.drawerButton} onPress={openDrawer}>
-        <Text style={styles.buttonText}>Menu</Text>
+        <Text style={styles.menu}>Menu</Text>
       </TouchableOpacity>
         <View style={styles.container}>
             <View style={styles.formContainer}>
@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 16,
         textAlign: 'center',
+        color:'#563e2b'
     },
     input: {
         width: '100%',
@@ -131,12 +132,18 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     button: {
-        backgroundColor: '#607594',
+        backgroundColor: '#2a4853',
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
+        color:'white'
     },
     buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    menu: {
         color: '#000',
         fontSize: 16,
         fontWeight: 'bold',
@@ -161,7 +168,7 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         left: 0,
-        width: 250,
+        // width: 250,
         zIndex: 1000,
       },
 });

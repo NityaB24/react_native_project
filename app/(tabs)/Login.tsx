@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated, Easing, ActivityIndicator } from 'react-native';
 import CustomModal from '../components/Message/CustomModal';
 import axios from 'axios';
@@ -26,24 +26,6 @@ const HomeScreen = () => {
   const [drawerAnim] = useState(new Animated.Value(-250));
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [storedRole, setStoredRole] = useState('');
-
-  useEffect(() => {
-    const fetchRoleFromStorage = async () => {
-      try {
-        const role = await AsyncStorage.getItem('role');
-        if (role) {
-          setStoredRole(role);
-          setIsLoggedIn(true); // Set logged in state if role is found
-          openDrawer();
-        }
-      } catch (error) {
-        console.log('Error fetching role from AsyncStorage:', error);
-      }
-    };
-
-    fetchRoleFromStorage();
-  }, []);
 
   const toggleModal = () => {
     setisModalVisible(!isModalVisible);
@@ -77,15 +59,15 @@ const HomeScreen = () => {
   const handleChange = (name:string, value:string) => {
     setFormData({
       ...formData,
-      [name]: value.trim(),
+      [name]: value,
     });
   };
 
   const handleLogin = async () => {
     const { loginEmail, loginPassword, role } = formData;
 
-    if (!loginEmail.trim() || !loginPassword.trim() || !loginEmail.includes('@')) {
-      setModalMessage('Please enter valid email Id or password');
+    if (!loginEmail || !loginPassword) {
+      setModalMessage('Please enter both email and password');
       setModalVisible(true);
       return;
     }
@@ -131,7 +113,6 @@ const HomeScreen = () => {
           await AsyncStorage.setItem('role', userRole);
           setModalMessage('Login successfully');
           setIsLoggedIn(true);
-          setStoredRole(userRole); // Set the role to state
           openDrawer();
         } else {
           setModalMessage('Failed to Login: Token or userId not received');
@@ -154,12 +135,12 @@ const HomeScreen = () => {
   };
 
   const getDrawerComponent = () => {
-    switch (storedRole) {
+    switch (selectedRole) {
       case 'user':
         return <UserDrawer isOpen={isDrawerOpen} closeDrawer={closeDrawer} />;
       case 'retailer':
         return <RetailerDrawer isOpen={isDrawerOpen} closeDrawer={closeDrawer} />;
-      case 'manufacturer':
+      case 'admin':
         return <ManufacturerDrawer isOpen={isDrawerOpen} closeDrawer={closeDrawer} />;
       default:
         return null;
@@ -198,24 +179,25 @@ const HomeScreen = () => {
               editable={!isLoading}
             />
             <Text style={styles.subHeaderText}>Select Role:</Text>
-            <TouchableOpacity style={styles.roleSelector} onPress={toggleModal}>
-              <Text style={styles.roleSelectorText}>{selectedRole || 'Select a role'}</Text>
+            <TouchableOpacity style={styles.input} onPress={toggleModal} disabled={isLoading}>
+              <Text>{selectedRole || 'Select a role'}</Text>
             </TouchableOpacity>
+
             <Modal isVisible={isModalVisible} onBackdropPress={toggleModal}>
               <View style={styles.modalContainer}>
                 <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect('user')}>
-                  <Text style={styles.modalItemText}>User</Text>
+                  <Text>User</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect('retailer')}>
-                  <Text style={styles.modalItemText}>Retailer</Text>
+                  <Text>Retailer</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect('manufacturer')}>
-                  <Text style={styles.modalItemText}>Manufacturer</Text>
+                  <Text>Manufacturer</Text>
                 </TouchableOpacity>
               </View>
             </Modal>
             <TouchableOpacity
-              style={[styles.button, (isLoading || !formData.loginEmail || !formData.loginPassword) ? { backgroundColor: 'lightblue' } : null]}
+              style={[styles.button, (isLoading || !formData.loginEmail || !formData.loginPassword) ? { backgroundColor: '#ccc' } : null]}
               disabled={isLoading || !formData.loginEmail || !formData.loginPassword}
               onPress={handleLogin}
             >
@@ -225,7 +207,7 @@ const HomeScreen = () => {
                 <Text style={styles.buttonText}>Login</Text>
               )}
             </TouchableOpacity>
-            {selectedRole !== 'manufacturer' && (
+            {selectedRole !== 'admin' && (
               <Link href={'/components/Create'}>
                 <ThemedText type="link" style={styles.createAccountLink}>Create Account</ThemedText>
               </Link>
@@ -245,6 +227,7 @@ const HomeScreen = () => {
     </>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -311,32 +294,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: '#007BFF',
   },
-  roleSelector: {
-    backgroundColor: '#f0f0f0',
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom:15,
-  },
-  roleSelectorText: {
-    fontSize: 16,
-    color: '#555555',
-  },
   modalContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
+    padding: 20,
     borderRadius: 10,
-    padding: 10,
   },
   modalItem: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  modalItemText: {
-    fontSize: 18,
-    color: '#333333',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
   drawerButton: {
     position: 'absolute',

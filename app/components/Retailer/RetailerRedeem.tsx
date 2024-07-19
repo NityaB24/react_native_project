@@ -14,7 +14,7 @@ const RetailerRedeem = () => {
     useEffect(() => {
         const checkTokenAndUserId = async () => {
             const token = await AsyncStorage.getItem("token");
-            const retailerId = await AsyncStorage.getItem('retailerId');
+            const retailerId = await AsyncStorage.getItem('loggedId');
             if (!token || !retailerId) {
                 console.error('No token or retailerId found');
             }
@@ -45,12 +45,12 @@ const RetailerRedeem = () => {
         try {
             setLoading(true);
             const token = await AsyncStorage.getItem("token");
-            const retailerId = await AsyncStorage.getItem('retailerId');
+            const retailerId = await AsyncStorage.getItem('loggedId');
             if (!token || !retailerId) {
                 console.error('No token or retailerId found');
                 return;
             }
-            const res = await axios.post('http://192.0.0.2:3000/api/retailer/request-redemption', {
+            const res = await axios.post('http://192.168.29.101:3000/api/retailer/request-redemption', {
                 retailerId,
                 points,
                 method
@@ -67,7 +67,8 @@ const RetailerRedeem = () => {
                 [{ text: 'OK' }]
             );
         } catch (err) {
-            console.error(err);
+            // console.error(err);
+            Alert.alert('Insufficient Points or Something Went Wrong');
             // setError('Insufficient Points or Something Went Wrong');
             setResponse(null);
         } finally {
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         left: 0,
-        width: 250,
+        // width: 250,
         backgroundColor: '#FFFFFF',
         zIndex: 1000,
         borderRightWidth: 1,

@@ -33,7 +33,7 @@ const RedemptionForm = () => {
     useEffect(() => {
         const checkTokenAndUserId = async () => {
             const token = await AsyncStorage.getItem("token");
-            const userId = await AsyncStorage.getItem('userId');
+            const userId = await AsyncStorage.getItem('loggedId');
             
             if (!token || !userId) {
                 console.error('No token or userId found');
@@ -46,14 +46,14 @@ const RedemptionForm = () => {
         try {
             setLoading(true);
             const token = await AsyncStorage.getItem("token");
-            const userId = await AsyncStorage.getItem('userId');
+            const userId = await AsyncStorage.getItem('loggedId');
             
             if (!token || !userId) {
                 console.error('No token or userId found');
                 return;
             }
 
-            const res = await axios.post('http://192.0.0.2:3000/api/users/request-redemption', {
+            const res = await axios.post('http://192.168.29.101:3000/api/users/request-redemption', {
                 userId,
                 points,
                 method
@@ -73,7 +73,8 @@ const RedemptionForm = () => {
                 { cancelable: false }
             );
         } catch (err) {
-            console.error('Insufficient Points or Something Went Wrong');
+            // console.error('Insufficient Points or Something Went Wrong');
+            Alert.alert('Insufficient Points or Something Went Wrong');
             setResponse(null);
         } finally {
             setLoading(false);

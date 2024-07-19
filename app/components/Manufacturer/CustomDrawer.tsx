@@ -14,7 +14,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, closeDrawer }) => {
       <TouchableOpacity onPress={closeDrawer}>
         <Text style={styles.closeButton}>&#10006;</Text>
       </TouchableOpacity>
-      <Link href="/components/Manufacturer/Dashboard" style={styles.link}>
+      <Link href="/components/Manufacturer/Transfer Points" style={styles.link}>
         <Text style={styles.linkText}>Transfer Points</Text>
       </Link>
       <View style={styles.divider} />
@@ -28,6 +28,18 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, closeDrawer }) => {
       <View style={styles.divider} />
       <Link href="/components/Manufacturer/transaction" style={styles.link}>
         <Text style={styles.linkText}>Transactions</Text>
+      </Link>
+      <View style={styles.divider} />
+      <Link href="/components/Manufacturer/plumberdata" style={styles.link}>
+        <Text style={styles.linkText}>Plumber Data</Text>
+      </Link>
+      <View style={styles.divider} />
+      <Link href="/components/Manufacturer/Retailer_kyc" style={styles.link}>
+        <Text style={styles.linkText}>Retailer KYC Request</Text>
+      </Link>
+      <View style={styles.divider} />
+      <Link href="/components/Manufacturer/Plumber_kyc" style={styles.link}>
+        <Text style={styles.linkText}>Plumber KYC Request</Text>
       </Link>
       <View style={styles.divider} />
     </View>

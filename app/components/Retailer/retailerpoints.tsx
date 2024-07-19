@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Animated, Easing } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Animated, Easing, Alert } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomDrawer from './CustomDrawer';
@@ -16,6 +16,7 @@ const RetailerPoints = () => {
   const [pointsRedeemed, setPointsRedeemed] = useState<number>(0);
   const [pointsReceived, setPointsReceived] = useState<number>(0);
   const [last5Transactions, setLast5Transactions] = useState<Transaction[]>([]);
+  const [couponCodes, setCouponCodes] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerAnim] = useState(new Animated.Value(-300));
@@ -28,11 +29,12 @@ const RetailerPoints = () => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.error('No token found');
+      const retailerId = await AsyncStorage.getItem('loggedId');
+      if (!token || !retailerId) {
+        console.error('No token or Id found');
         return;
       }
-      const response = await axios.get('http://192.0.0.2:3000/api/retailer/points', {
+      const response = await axios.get('http://192.168.29.101:3000/api/retailer/points', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -42,8 +44,10 @@ const RetailerPoints = () => {
       setPointsRedeemed(response.data.pointsRedeemed);
       setPointsReceived(response.data.pointsReceived);
       setLast5Transactions(response.data.last5Entries);
+      setCouponCodes(response.data.couponCodes); // Update state with coupon codes
     } catch (error) {
-      console.error('Error fetching points:', error);
+      // console.error('Error fetching points:', error);
+      Alert.alert('Error fetching points');
     } finally {
       setLoading(false);
     }
@@ -103,18 +107,18 @@ const RetailerPoints = () => {
             <ActivityIndicator size="large" color="#007BFF" />
           ) : pointsLeft !== null ? (
             <>
-              <View style={styles.pointsContainer}>
-                <View style={[styles.pointBox, styles.pointsLeft]}>
-                  <Text style={styles.pointValue}>{pointsLeft}</Text>
-                  <Text style={styles.pointLabel}>Points Left</Text>
+              <View style={styles.cardsContainer}>
+                <View style={[styles.card, styles.pointsLeft]}>
+                  <Text style={styles.cardValue}>{pointsLeft}</Text>
+                  <Text style={styles.cardLabel}>Points Left</Text>
                 </View>
-                <View style={[styles.pointBox, styles.pointsRedeemed]}>
-                  <Text style={styles.pointValue}>{pointsRedeemed}</Text>
-                  <Text style={styles.pointLabel}>Points Redeemed</Text>
+                <View style={[styles.card, styles.pointsRedeemed]}>
+                  <Text style={styles.cardValue}>{pointsRedeemed}</Text>
+                  <Text style={styles.cardLabel}>Points Redeemed</Text>
                 </View>
-                <View style={[styles.pointBox, styles.pointsReceived]}>
-                  <Text style={styles.pointValue}>{pointsReceived}</Text>
-                  <Text style={styles.pointLabel}>Points Received</Text>
+                <View style={[styles.card, styles.pointsReceived]}>
+                  <Text style={styles.cardValue}>{pointsReceived}</Text>
+                  <Text style={styles.cardLabel}>Points Received</Text>
                 </View>
               </View>
 
@@ -126,6 +130,7 @@ const RetailerPoints = () => {
                   keyExtractor={(item, index) => index.toString()}
                 />
               </View>
+              
             </>
           ) : (
             <Text style={styles.noPointsText}>No points available</Text>
@@ -160,16 +165,15 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  pointsContainer: {
-    flexDirection: 'row',
+  cardsContainer: {
+    flexDirection: 'column',
     justifyContent: 'space-between',
     marginBottom: 20,
   },
-  pointBox: {
-    flex: 1,
+  card: {
     paddingVertical: 20,
     paddingHorizontal: 15,
-    marginHorizontal: 5,
+    marginVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
@@ -188,12 +192,15 @@ const styles = StyleSheet.create({
   pointsReceived: {
     backgroundColor: '#EF4444',
   },
-  pointValue: {
+  couponCodes: {
+    backgroundColor: '#FBBF24',
+  },
+  cardValue: {
     fontSize: 28,
     color: '#FFFFFF',
     fontWeight: '600',
   },
-  pointLabel: {
+  cardLabel: {
     fontSize: 16,
     color: '#FFFFFF',
     marginTop: 5,
@@ -257,6 +264,7 @@ const styles = StyleSheet.create({
     width: 300,
     zIndex: 1000,
   },
+  
 });
 
 export default RetailerPoints;
