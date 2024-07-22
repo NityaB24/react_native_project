@@ -1,37 +1,54 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import { Stack, useRouter } from 'expo-router';
+import { AuthProvider, useAuth } from '../context/Auth';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+const StackLayout = () => {
+    const { authState } = useAuth();
+    const router = useRouter();
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+    useEffect(() => {
+        if (authState?.attemptedLogin && !authState?.authenticated) {
+            // Do not redirect if the login was attempted but failed
+            return;
+          }
+        if (!authState?.role) {
+            router.replace('/'); // Redirect to home if not authenticated
+        } else {
+            switch (authState.role) {
+                case 'retailer':
+                    router.replace('/(retailer)');
+                    break;
+                case 'user':
+                    router.replace('/(user)');
+                    break;
+                case 'manufacturer':
+                    router.replace('/(manufacturer)');
+                    break;
+                default:
+                    router.replace('/'); // Handle unexpected roles
+                    break;
+            }
+        }
+    }, [authState, router]);
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+    return (
+        <Stack>
+            <Stack.Screen name="index" options={{headerShown: false }} />
+            <Stack.Screen name="(user)" options={{ headerShown: false }} />
+            <Stack.Screen name="(retailer)" options={{ headerShown: false }} />
+            <Stack.Screen name="(manufacturer)" options={{ headerShown: false }} />
+            {/* <Stack.Screen name="(usertabs)" options={{ headerShown: false }} /> */}
+            {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} /> */}
+        </Stack>
+    );
+};
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+const RootLayoutNav = () => {
+    return (
+        <AuthProvider>
+            <StackLayout />
+        </AuthProvider>
+    );
+};
 
-  if (!loaded) {
-    return null;
-  }
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
-  );
-}
+export default RootLayoutNav;
