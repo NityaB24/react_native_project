@@ -99,6 +99,7 @@ const HomeScreen = () => {
           <Text style={styles.headerText}>
             Welcome to <Text style={styles.highlightText}>Scatch</Text>
           </Text>
+          
           <View style={styles.section}>
             <Text style={styles.subHeaderText}>Login to Your Account</Text>
             <TextInput
