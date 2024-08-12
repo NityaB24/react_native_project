@@ -8,8 +8,9 @@ import Modal from 'react-native-modal';
 const Create = () => {
   const [formData, setFormData] = useState({
     createName: '',
-    createEmail: '',
+    createPlace: '',
     createPassword: '',
+    createPhone:'',
     role: ''
   });
   const [modalVisible, setModalVisible] = useState(false);
@@ -17,13 +18,11 @@ const Create = () => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState('');
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerAnim] = useState(new Animated.Value(-250));
   const [isAccountCreated, setIsAccountCreated] = useState(false);
 
   useEffect(() => {
-    const { createName, createEmail, createPassword } = formData;
-    setIsButtonDisabled(!(createName.trim().length >= 3 && createEmail.trim() && createPassword.trim() && createEmail.includes('@')));
+    const { createName, createPlace, createPassword,createPhone } = formData;
+    setIsButtonDisabled(!(createName.length >= 3 && createPlace.trim() && createPassword.trim()  && createPhone.trim().length == 10));
   }, [formData]);
 
   const handleChange = (name: string, value: string) => {
@@ -45,20 +44,20 @@ const Create = () => {
 
   const handleCreateAccount = async () => {
     try {
-      const { createName, createEmail, createPassword, role } = formData;
-
-      if (createName.trim().length < 3 || !createEmail.trim() || !createPassword.trim() || !createEmail.includes('@')) {
-        setModalMessage('Invalid Email Format or fill details properly');
+      const { createName, createPlace, createPassword, createPhone, role } = formData;
+  
+      if (createName.length < 3 || !createPlace.trim() || !createPassword.trim()) {
+        setModalMessage('Invalid Phone Format or fill details properly');
         setModalVisible(true);
         return;
       }
-
+  
       let registerEndpoint = '';
       switch (role) {
-        case 'user':
+        case 'Plumber':
           registerEndpoint = `${process.env.EXPO_BACKEND}/api/users/register`;
           break;
-        case 'retailer':
+        case 'Retailer':
           registerEndpoint = `${process.env.EXPO_BACKEND}/api/retailer/register`;
           break;
         default:
@@ -66,46 +65,52 @@ const Create = () => {
           setModalVisible(true);
           return;
       }
-
+  
       const userData = {
         name: createName,
-        email: createEmail,
+        place: createPlace,
         password: createPassword,
+        phone: createPhone
       };
-
+  
       const response = await axios.post(registerEndpoint, userData, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+  
+      console.log('Response status:', response.status);
+      console.log('Response data:', response.data);
+  
       if (response.status === 200) {
         const { token, id, role } = response.data;
-
+  
         if (token && id) {
           await AsyncStorage.setItem('token', token);
-          await AsyncStorage.setItem('userId', id);
+          await AsyncStorage.setItem('loggedId', id);
           await AsyncStorage.setItem('role', role);
           setIsAccountCreated(true);
         }
-
+  
         setModalMessage('Account created successfully');
       } else {
         setModalMessage('Failed to create account');
       }
     } catch (error:any) {
-      console.log('Error creating account:', error.message);
-      setModalMessage('Failed to create account');
+
+      setModalMessage(error.response ? error.response.data : error.message);
     } finally {
       setModalVisible(true);
       setFormData({
         createName: '',
-        createEmail: '',
+        createPlace: '',
         createPassword: '',
+        createPhone: '',
         role: ''
       });
     }
   };
+  
 
   return (
     <>
@@ -124,10 +129,18 @@ const Create = () => {
             />
             <TextInput
               style={styles.input}
-              placeholder="Email"
-              value={formData.createEmail}
-              onChangeText={(value) => handleChange('createEmail', value)}
-              keyboardType="email-address"
+              placeholder="Phone Number"
+              value={formData.createPhone}
+              onChangeText={(value) => handleChange('createPhone', value)}
+              placeholderTextColor="#6c757d"
+              selectionColor="#007bff"
+              keyboardType="number-pad"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Place"
+              value={formData.createPlace}
+              onChangeText={(value) => handleChange('createPlace', value)}
               placeholderTextColor="#6c757d"
               selectionColor="#007bff"
             />
@@ -146,10 +159,10 @@ const Create = () => {
             </TouchableOpacity>
             <Modal isVisible={isModalVisible} onBackdropPress={toggleModal}>
               <View style={styles.modalContainer}>
-                <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect('user')}>
-                  <Text style={styles.modalItemText}>User</Text>
+                <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect('Plumber')}>
+                  <Text style={styles.modalItemText}>Plumber</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect('retailer')}>
+                <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect('Retailer')}>
                   <Text style={styles.modalItemText}>Retailer</Text>
                 </TouchableOpacity>
               </View>

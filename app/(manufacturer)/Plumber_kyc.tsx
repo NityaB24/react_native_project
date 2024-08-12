@@ -51,7 +51,7 @@ const KYCRequests: React.FC = () => {
             } else {
                 setMessage('Token is missing');
             }
-        } catch (error:any) {
+        } catch (error) {
             // console.error('Error fetching KYC requests:', error);
             setMessage('Failed to fetch KYC requests');
         } finally {
@@ -87,7 +87,7 @@ const KYCRequests: React.FC = () => {
             } else {
                 Alert.alert('Error', 'Failed to approve KYC request');
             }
-        } catch (error:any) {
+        } catch (error) {
             // console.error('Error approving KYC request:', error);
             Alert.alert('Error', 'Failed to approve KYC request');
         }
@@ -111,7 +111,7 @@ const KYCRequests: React.FC = () => {
             } else {
                 Alert.alert('Error', 'Failed to reject KYC request');
             }
-        } catch (error:any) {
+        } catch (error) {
             // console.error('Error rejecting KYC request:', error);
             Alert.alert('Error', 'Failed to reject KYC request');
         }

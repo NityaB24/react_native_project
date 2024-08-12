@@ -43,7 +43,7 @@ const Schemes = () => {
       } else {
         setMessage('Failed to fetch schemes');
       }
-    } catch (error:any) {
+    } catch (error) {
       setMessage('Error fetching schemes');
     }
   };
@@ -141,8 +141,8 @@ const styles = StyleSheet.create({
 },
 fullScreenImage: {
     width: '100%',
-    height: '90%',
-    resizeMode: 'contain',
+    height: '80%',
+    // resizeMode: 'contain',
 },
 closeButton: {
     position: 'absolute',

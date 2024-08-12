@@ -4,29 +4,21 @@ import { AuthProvider } from '@/context/Auth';
 import { Drawer } from 'expo-router/drawer';
 import { FontAwesome, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { FontAwesome6 } from '@expo/vector-icons';
-
+import { View,Image } from 'react-native';
+import CustomDrawerContent from '../../components/custom';
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const [isEnabled, setIsEnabled] = useState(true);
 
   return (
     <AuthProvider>
-      <Drawer>
+      <Drawer drawerContent={(props) => <CustomDrawerContent {...props} />}>
         <Drawer.Screen
           name="index"
           options={{
             title: 'Dashboard',
             drawerIcon: ({ color, focused }) => (
               <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={20} />
-            ),
-          }}
-        />
-        <Drawer.Screen
-          name="CouponCodes"
-          options={{
-            title: 'Coupon Codes',
-            drawerIcon: ({ color, focused }) => (
-              <FontAwesome name={focused ? 'ticket' : 'ticket'} color={color} size={20} />
             ),
           }}
         />
@@ -40,11 +32,11 @@ export default function TabLayout() {
           }}
         />
         <Drawer.Screen
-          name="AddUserToRetailer"
+          name="CouponCodes"
           options={{
-            title: 'Add Plumber',
+            title: 'Coupon Codes',
             drawerIcon: ({ color, focused }) => (
-              <FontAwesome6 name={focused ? 'user-plus' : 'user-plus'} color={color} size={20} />
+              <FontAwesome name={focused ? 'ticket' : 'ticket'} color={color} size={20} />
             ),
           }}
         />

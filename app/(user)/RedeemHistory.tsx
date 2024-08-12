@@ -52,7 +52,7 @@ const RedeemHistory = () => {
             const redeemedEntries = response.data.allEntries.filter((entry: Transaction) => entry.type === 'redeemed');
             setAllEntries(redeemedEntries);
             setFilteredEntries(redeemedEntries); // Initially set all entries as filtered entries
-        } catch (error:any) {
+        } catch (error) {
             // console.error('Error fetching points:', error);
             Alert.alert('Error fetching points');
         } finally {

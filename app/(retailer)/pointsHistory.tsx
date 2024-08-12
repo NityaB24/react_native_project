@@ -53,7 +53,7 @@ const RetailerHistory = () => {
             });
             setAllEntries(response.data.allEntries);
             setFilteredEntries(response.data.allEntries); // Initially set all entries as filtered entries
-        } catch (error:any) {
+        } catch (error) {
             // console.error('Error fetching points:', error);
             Alert.alert('Error fetching points');
         } finally {
@@ -72,13 +72,27 @@ const RetailerHistory = () => {
 
     const renderItem = ({ item }: { item: Transaction }) => (
         <View style={styles.transactionItem}>
-            <Text style={styles.transactionDate}>{new Date(item.date).toLocaleDateString()} • {format12Hour(item.date)}</Text>
+            <Text style={styles.transactionDate}>
+                {new Date(item.date).toLocaleDateString()} • {format12Hour(item.date)}
+            </Text>
             {item.type === 'received' && (
-                <Text style={styles.transactionDate}>Expiry Date: {new Date(item.expiryDate).toLocaleDateString()} • {format12Hour(item.expiryDate)}</Text>
+                <>
+                    <Text style={styles.transactionDate}>
+                        Expiry Date: {new Date(item.expiryDate).toLocaleDateString()} • {format12Hour(item.expiryDate)}
+                    </Text>
+                    <Text style={styles.transactionDetails}>
+                        {item.type}  +{item.points} points
+                    </Text>
+                </>
             )}
-            <Text style={styles.transactionDetails}>{item.type} • {item.points} points</Text>
+            {(item.type === 'sent' || item.type === 'redeemed') && (
+                <Text style={styles.transactionDetails}>
+                    {item.type}  -{item.points} points
+                </Text>
+            )}
         </View>
     );
+    
 
     const applyFilter = () => {
         if (!startDate || !endDate) {

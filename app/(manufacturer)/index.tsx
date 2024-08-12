@@ -1,27 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Animated, Easing, TouchableOpacity,RefreshControl, Button } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TextInput, RefreshControl } from 'react-native';
 import axios from 'axios';
 import { Link } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // Define a type for the retailer object
 interface Retailer {
   _id: string;
   name: string;
-  email: string;
+  phone: string;
   pointsReceived: number;
 }
 
 const Dashboard = () => {
   const [retailers, setRetailers] = useState<Retailer[]>([]);
+  const [filteredRetailers, setFilteredRetailers] = useState<Retailer[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [message, setMessage] = useState('');
   const [token, setToken] = useState<string | null>(null);
   const [manuId, setManuId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
   // Fetch retailers on component mount
   useEffect(() => {
     fetchRetailers();
   }, []);
+
+  // Filter retailers based on search query
+  useEffect(() => {
+    setFilteredRetailers(
+      retailers.filter(retailer =>
+        retailer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (retailer.phone && retailer.phone.includes(searchQuery))
+      )
+    );
+  }, [searchQuery, retailers]);
+  
 
   const fetchRetailers = async () => {
     try {
@@ -38,16 +53,22 @@ const Dashboard = () => {
           },
         });
         setRetailers(response.data);
+        setFilteredRetailers(response.data);
       } else {
         setMessage('Token or Manufacturer ID is missing');
       }
-    } catch (error:any) {
-      // console.error('Error fetching retailers:', error);
+    } catch (error: any) {
+      console.log(error);
       setMessage('Failed to fetch retailers');
     } finally {
       setLoading(false);
       setIsRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    fetchRetailers();
   };
 
   if (loading || !token || !manuId) {
@@ -57,26 +78,27 @@ const Dashboard = () => {
       </View>
     );
   }
-  const onRefresh = () => {
-    setIsRefreshing(true); // Set refreshing indicator
-    fetchRetailers(); // Fetch data again
-};
-
 
   return (
     <>
       <ScrollView contentContainerStyle={styles.scrollViewContainer} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={['#34D399']} />}>
         <Text style={styles.title}>Retailers</Text>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search Retailers"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
         {message ? (
           <View style={styles.messageContainer}>
             <Text style={styles.message}>{message}</Text>
           </View>
         ) : (
-          retailers.map(retailer => (
+          filteredRetailers.map(retailer => (
             <View key={retailer._id} style={styles.retailerCard}>
               <Text style={styles.retailerName}>{retailer.name}</Text>
               <Text style={styles.retailerInfo}>
-                <Text style={styles.label}>Email:</Text> {retailer.email}
+                <Text style={styles.label}>Phone Number:</Text> {retailer.phone}
               </Text>
               <Text style={styles.retailerInfo}>
                 <Text style={styles.label}>Points:</Text> {retailer.pointsReceived}
@@ -88,7 +110,6 @@ const Dashboard = () => {
           ))
         )}
       </ScrollView>
-
     </>
   );
 };
@@ -111,6 +132,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     color: '#343a40',
+  },
+  searchBar: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+    backgroundColor: '#fff',
   },
   messageContainer: {
     marginTop: 20,
@@ -159,7 +189,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#007bff',
     fontWeight: 'bold',
-    marginTop:5,
+    marginTop: 5,
   },
   transferButton: {
     backgroundColor: '#007bff',

@@ -42,7 +42,7 @@ const Transactions = () => {
       });
 
       setTransactions(response.data.transactions);
-    } catch (error:any) {
+    } catch (error) {
       // console.error('Error fetching transactions:', error);
       setError('Error fetching transactions. Please check console for details.');
     } finally {

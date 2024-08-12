@@ -28,7 +28,7 @@ const Profile = () => {
 
   const [profile, setProfile] = useState({
     name: '',
-    email: '',
+    phone: '',
     profilePhoto: '',
   });
   const [message, setMessage] = useState('');
@@ -64,8 +64,8 @@ const Profile = () => {
 
       setImageUris(response.data.profilePhoto || '');
       setProfile(response.data);
-    } catch (error:any) {
-      console.error('Frontend error:', error);
+    } catch (error) {
+      // console.error('Frontend error:', error);
       setMessage('Error fetching profile');
     }
   };
@@ -80,7 +80,7 @@ const Profile = () => {
 
       const payload = {
         name: profile.name,
-        email: profile.email,
+        phone: profile.phone,
         profilePhoto: profile.profilePhoto,
       };
 
@@ -96,7 +96,7 @@ const Profile = () => {
       } else {
         setMessage('Failed to update profile');
       }
-    } catch (error:any) {
+    } catch (error) {
       setMessage('Error updating profile');
     }
   };
@@ -105,39 +105,40 @@ const Profile = () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [4,3],
       quality: 1,
     });
 
     if (!result.canceled && result.assets.length > 0) {
       const filePath = result.assets[0].uri;
-      const timestamp = new Date().toISOString();
-      const fileName = `${timestamp}_${imageType}.jpg`;
+      const phone = profile.phone;
+      const fileName = `${phone}/${imageType}.jpg`;
       const bucketName = 'verification-files-project';
 
-      try {
-        const response = await fetch(filePath);
-        const filedata = await response.blob();
-        await uploadFilestoS3(bucketName, fileName, filedata);
-        const fileUrl = `https://${bucketName}.s3.amazonaws.com/${fileName}`;
-        setProfile({ ...profile, [imageType]: fileUrl });
-        setImageUris(fileUrl);
-      } catch (error:any) {
+    try {
+      const response = await fetch(filePath);
+      const filedata = await response.blob();
+      await uploadFilestoS3(bucketName, fileName, filedata);
+
+      const fileUrl = `https://${bucketName}.s3.amazonaws.com/${fileName}`;
+      setProfile({ ...profile, [imageType]: fileUrl });
+      setImageUris(fileUrl);
+      } catch (error) {
         console.log('upload error', error);
       }
     }
   };
 
-  if (!hasGalleryPermission) {
-    return <Text>No access to internal storage</Text>;
-  }
+  // if (!hasGalleryPermission) {
+  //   return <Text>No access to internal storage</Text>;
+  // }
 
   const handleLogout = async () => {
     try {
       await AsyncStorage.clear();
       router.replace('/'); // Redirect to home screen
-    } catch (error:any) {
-      console.error('Error clearing AsyncStorage:', error);
+    } catch (error) {
+      // console.error('Error clearing AsyncStorage:', error);
     }
   };
 
@@ -145,7 +146,7 @@ const Profile = () => {
     <View style={styles.container}>
       <View style={styles.profileHeader}>
         <Image
-          source={{ uri: imageUris || 'https://via.placeholder.com/150' }}
+          source={{ uri: imageUris || 'https://avatar.iran.liara.run/public/21' }}
           style={styles.profilePhoto}
         />
         <TouchableOpacity onPress={() => uploadImage('profilePhoto')} style={styles.iconButton2}>
@@ -160,12 +161,12 @@ const Profile = () => {
           value={profile.name}
           onChangeText={(text) => setProfile({ ...profile, name: text })}
         />
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles.label}>Phone Number</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"
-          value={profile.email}
-          onChangeText={(text) => setProfile({ ...profile, email: text })}
+          value={profile.phone}
+          onChangeText={(text) => setProfile({ ...profile, phone: text })}
         />
       </View>
       <TouchableOpacity onPress={handleUpdateProfile} style={styles.updateButton}>

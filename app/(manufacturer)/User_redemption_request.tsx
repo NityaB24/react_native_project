@@ -9,6 +9,10 @@ interface RedemptionRequest {
     points: number;
     status: string;
     dateRequested: string;
+    holderName?: string;
+  ifscCode?: string;
+  accountNumber?: string;
+  upiNumber?: string;
 }
 
 const UserRedemptionRequest = () => {
@@ -37,7 +41,7 @@ const UserRedemptionRequest = () => {
             const filteredRequests = response.data.requests.filter((request: RedemptionRequest) => request.status === 'pending');
             setRequests(filteredRequests);
             setMessage('');
-        } catch (error:any) {
+        } catch (error) {
             // console.error('Error fetching redemption requests:', error);
             setMessage('Error fetching redemption requests');
         }finally{
@@ -83,7 +87,7 @@ const UserRedemptionRequest = () => {
                     }
 
                     fetchRequests();
-                } catch (error:any) {
+                } catch (error) {
                     // console.error('Error approving redemption:', error);
                     setMessage(`Error approving redemption: ${error}`);
                 }
@@ -139,6 +143,10 @@ const UserRedemptionRequest = () => {
                 <View key={request._id} style={styles.requestItem}>
                   <Text style={styles.methodText}>{request.method}</Text>
                   <Text style={styles.pointsText}>Points: {request.points}</Text>
+                  {request.holderName && <Text style={styles.detailText}>Holder Name: {request.holderName}</Text>}
+                  {request.ifscCode && <Text style={styles.detailText}>IFSC Code: {request.ifscCode}</Text>}
+                  {request.accountNumber && <Text style={styles.detailText}>Account Number: {request.accountNumber}</Text>}
+                  {request.upiNumber && <Text style={styles.detailText}>UPI Number: {request.upiNumber}</Text>}
                   <Text style={styles.dateText}>Date Requested: {format12Hour(request.dateRequested)}</Text>
                   <TouchableOpacity style={styles.approveButton} onPress={() => handleApprove(request._id)}>
                     <Text style={styles.approveButtonText}>Approve</Text>
@@ -233,7 +241,12 @@ const styles = StyleSheet.create({
       color: '#fff',
       fontWeight: '600',
       fontSize: 16,
-    }
+    },
+    detailText: {
+      fontSize: 16,
+      color: '#444',
+      marginBottom: 5,
+    },
   });
 
 export default UserRedemptionRequest;

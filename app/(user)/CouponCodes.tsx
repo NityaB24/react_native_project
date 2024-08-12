@@ -37,7 +37,7 @@ const CouponCodes = () => {
       setUsername(response.data.username);
       setCouponCodes(response.data.couponCodes);
 
-    } catch (error:any) {
+    } catch (error) {
       // console.error('Error fetching points:', error);
       Alert.alert('Error fetching points');
     } finally {

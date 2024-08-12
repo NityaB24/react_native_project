@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, RefreshControl, Alert, TextInput } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link } from 'expo-router';
@@ -7,18 +7,28 @@ import { Link } from 'expo-router';
 interface User {
     _id: string;
     name: string;
-    email: string;
+    phone: string;
     points: number;
 }
 
 const RetailerUsers = () => {
     const [users, setUsers] = useState<User[]>([]);
+    const [phone, setPhone] = useState('');
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false); // State for pull-to-refresh
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         fetchUsers();
+        const checkTokenAndUserId = async () => {
+            const token = await AsyncStorage.getItem("token");
+            const retailerId = await AsyncStorage.getItem('loggedId');
+            
+            if (!token || !retailerId) {
+                console.error('No token or userId found');
+            }
+        };
+        checkTokenAndUserId();
     }, []);
 
     const fetchUsers = async () => {
@@ -36,17 +46,79 @@ const RetailerUsers = () => {
                 },
             });
             setUsers(response.data.users);
-        } catch (error:any) {
+        } catch (error: any) {
             setMessage('Error fetching users');
         } finally {
             setLoading(false);
-            setIsRefreshing(false); // Turn off refreshing indicator
+            setIsRefreshing(false);
         }
     };
 
+    const handleAddUser = async () => {
+        try {
+            setLoading(true);
+            const token = await AsyncStorage.getItem("token");
+            const retailerId = await AsyncStorage.getItem('loggedId');
+            if (!token || !retailerId) {
+                setMessage('No token or retailerId found');
+                return;
+            }
+            const response = await axios.post(`${process.env.EXPO_BACKEND}/api/retailer/addusers`, { retailerId, phone }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            Alert.alert("Plumber Added Successfully");
+            setPhone('');
+        } catch (error) {
+            Alert.alert('Error Occurred:\n Please check the entered Phone Number');
+        } finally {
+            fetchUsers();
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (userId: string) => {
+        Alert.alert(
+            'Confirm Delete',
+            'Are you sure you want to delete this plumber?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const token = await AsyncStorage.getItem('token');
+                            if (!token) {
+                                setMessage('No token found');
+                                return;
+                            }
+                            await axios.delete(`${process.env.EXPO_BACKEND}/api/retailer/users/${userId}`, {
+                                headers: {
+                                    Authorization: `Bearer ${token}`,
+                                },
+                            });
+                            Alert.alert('Plumber Deleted Successfully');
+                            fetchUsers();
+                        } catch (error: any) {
+                            Alert.alert('Error', 'Failed to delete plumber');
+                        }
+                    },
+                },
+            ],
+            { cancelable: true }
+        );
+    };
+    
+
     const onRefresh = () => {
-        setIsRefreshing(true); // Set refreshing indicator
-        fetchUsers(); // Fetch users again
+        setIsRefreshing(true);
+        fetchUsers();
     };
 
     return (
@@ -57,12 +129,22 @@ const RetailerUsers = () => {
                     <RefreshControl
                         refreshing={isRefreshing}
                         onRefresh={onRefresh}
-                        colors={['#1A73E8']} // Customize the colors of the refresh indicator
+                        colors={['#1A73E8']}
                     />
                 }
             >
-                <Text style={styles.title}>Plumbers</Text>
-                {loading && <ActivityIndicator size="large" color="#0000ff" />}
+                <TextInput
+                    style={styles.input}
+                    value={phone}
+                    onChangeText={(text) => setPhone(text)}
+                    placeholder="Enter Plumber Phone Number"
+                    placeholderTextColor="#999"
+                />
+                <TouchableOpacity style={styles.addButton} onPress={handleAddUser}>
+                    <Text style={styles.addButtonText}>Add Plumber</Text>
+                </TouchableOpacity>
+
+                {loading && <ActivityIndicator size="large" color="#6200EE" />}
                 {message ? (
                     <View style={styles.messageContainer}>
                         <Text style={styles.message}>{message}</Text>
@@ -72,15 +154,21 @@ const RetailerUsers = () => {
                         <View key={user._id} style={styles.userCard}>
                             <Text style={styles.username}>{user.name}</Text>
                             <Text style={styles.userInfo}>
-                                <Text style={styles.label}>Email:</Text> {user.email}
+                                <Text style={styles.label}>Phone:</Text> {user.phone}
                             </Text>
-                            <Text style={styles.userInfo}>
+                            {/* <Text style={styles.userInfo}>
                                 <Text style={styles.label}>Points:</Text> {user.points}
-                            </Text>
+                            </Text> */}
                             <View style={styles.buttonContainer}>
-                                <Link href={`/TransferPointsToUser/${user._id}`} style={styles.button}>
+                                <Link href={`/TransferPointsToUser/${user._id}`} style={[styles.button, styles.transferButton]}>
                                     <Text style={styles.buttonText}>Transfer Points</Text>
                                 </Link>
+                                <TouchableOpacity
+                                    style={[styles.button, styles.deleteButton]}
+                                    onPress={() => handleDelete(user._id)}
+                                >
+                                    <Text style={styles.buttonText}>Delete</Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
                     ))
@@ -93,28 +181,43 @@ const RetailerUsers = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: '#F7FAFC',
     },
     scrollViewContent: {
         padding: 20,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
+    input: {
+        width: '100%',
+        padding: 15,
         marginBottom: 20,
-        textAlign: 'center',
-        color: '#1F2937',
+        borderColor: '#E2E8F0',
+        borderWidth: 1,
+        borderRadius: 12,
+        backgroundColor: '#FFFFFF',
+        fontSize: 16,
+    },
+    addButton: {
+        backgroundColor: '#2a4853',
+        padding: 15,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginBottom:10,
+    },
+    addButtonText: {
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: 'bold',
     },
     messageContainer: {
         marginTop: 20,
-        padding: 10,
-        borderRadius: 8,
-        backgroundColor: '#F0F0F0',
+        padding: 15,
+        borderRadius: 12,
+        backgroundColor: '#E53E3E',
         alignItems: 'center',
     },
     message: {
-        textAlign: 'center',
-        color: 'red',
+        color: '#FFFFFF',
+        fontSize: 16,
     },
     userCard: {
         backgroundColor: '#FFFFFF',
@@ -130,7 +233,7 @@ const styles = StyleSheet.create({
         borderColor: '#E2E8F0',
     },
     username: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 8,
         color: '#333',
@@ -142,7 +245,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontWeight: 'bold',
-        color: '#555',
+        color: '#4A5568',
     },
     buttonContainer: {
         flexDirection: 'row',
@@ -151,16 +254,20 @@ const styles = StyleSheet.create({
     },
     button: {
         flex: 1,
-        backgroundColor: '#1A73E8',
-        padding: 10,
+        padding: 12,
         alignItems: 'center',
         marginRight: 10,
+        borderRadius: 8,
+    },
+    transferButton: {
+        backgroundColor: '#2D3748',
+    },
+    deleteButton: {
+        backgroundColor: '#E53E3E',
     },
     buttonText: {
         color: '#FFFFFF',
         fontWeight: 'bold',
-        alignItems:'center',
-        justifyContent:'center'
     },
 });
 

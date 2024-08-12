@@ -43,7 +43,7 @@ const Schemes = () => {
       } else {
         setMessage('Failed to fetch schemes');
       }
-    } catch (error:any) {
+    } catch (error) {
       setMessage('Error fetching schemes');
     }
   };

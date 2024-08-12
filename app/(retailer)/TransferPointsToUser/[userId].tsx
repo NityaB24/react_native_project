@@ -114,8 +114,10 @@ const TransferPointsToUser = () => {
       });
 
       setKycStatus(response.data.status);
+      setSuccessMessage('');
     } catch (error:any) {
-      console.error('Error while refreshing:', error);
+      // console.error('Error while refreshing:', error);
+      setSuccessMessage('');
     } finally {
       setRefreshing(false);
     }

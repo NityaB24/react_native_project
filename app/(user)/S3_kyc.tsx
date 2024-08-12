@@ -102,7 +102,7 @@ const TestS3Kyc = () => {
       } else {
         setMessage('Failed to check KYC status');
       }
-    } catch (error:any) {
+    } catch (error) {
       // console.error('Error checking KYC status:', error);
       setMessage('Error checking KYC status');
     }
@@ -151,8 +151,9 @@ const TestS3Kyc = () => {
     if (!result.canceled && result.assets.length > 0) {
       const filePath = result.assets[0].uri;
       const phoneNumber = kycDetails.phoneNumber.replace(/[^a-zA-Z0-9]/g, '');
+      const email = kycDetails.emailAddress;
       const timestamp = new Date().toISOString();
-      const fileName = `${phoneNumber}_${timestamp}_${imageType}.jpg`;
+      const fileName = `${email}/${timestamp}_${imageType}.jpg`;
       const bucketName = 'verification-files-project';
 
       try {
@@ -162,7 +163,7 @@ const TestS3Kyc = () => {
         const fileUrl = `https://${bucketName}.s3.amazonaws.com/${fileName}`;
         setKycDetails({ ...kycDetails, [imageType]: fileUrl });
         setImageUris({ ...imageUris, [imageType]: fileUrl });
-      } catch (error:any) {
+      } catch (error) {
         console.log('upload error', error);
       }
     }
@@ -191,7 +192,7 @@ const TestS3Kyc = () => {
       } else {
         setMessage('Failed to submit KYC request');
       }
-    } catch (error:any) {
+    } catch (error) {
       setMessage('error');
     }
   };

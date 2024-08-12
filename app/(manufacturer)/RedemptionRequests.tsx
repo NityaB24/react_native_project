@@ -9,6 +9,10 @@ interface RedemptionRequest {
   points: number;
   status: string;
   dateRequested: string;
+  holderName?: string;
+  ifscCode?: string;
+  accountNumber?: string;
+  upiNumber?: string;
 }
 
 const RedemptionRequests = () => {
@@ -16,6 +20,7 @@ const RedemptionRequests = () => {
   const [message, setMessage] = useState<string>('Loading...');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
   useEffect(() => {
     fetchRequests();
   }, []);
@@ -37,11 +42,9 @@ const RedemptionRequests = () => {
       const filteredRequests = response.data.requests.filter((request: RedemptionRequest) => request.status === 'pending');
       setRequests(filteredRequests);
       setMessage('');
-    } catch (error:any) {
-      // console.error('Error fetching redemption requests:', error);
+    } catch (error) {
       setMessage('Error fetching redemption requests');
-    }
-    finally {
+    } finally {
       setIsRefreshing(false);
     }
   };
@@ -76,8 +79,7 @@ const RedemptionRequests = () => {
           }
 
           fetchRequests();
-        } catch (error:any) {
-          // console.error('Error approving redemption:', error);
+        } catch (error) {
           setMessage('Error approving redemption');
         }
       }
@@ -90,7 +92,7 @@ const RedemptionRequests = () => {
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12;
+    hours = hours ? 12 : hours;
     const minutesStr = minutes < 10 ? '0' + minutes : minutes;
     const strTime = hours + ':' + minutesStr + ' ' + ampm;
     const month = date.toLocaleString('en-us', { month: 'short' });
@@ -101,11 +103,11 @@ const RedemptionRequests = () => {
   const onRefresh = () => {
     setIsRefreshing(true); // Set refreshing indicator
     fetchRequests(); // Fetch data again
-};
+  };
 
   return (
     <>
-      <View style={styles.container} >
+      <View style={styles.container}>
         {successMessage && <Text style={styles.successMessage}>{successMessage}</Text>}
         <ScrollView style={styles.innerContainer} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} colors={['#34D399']} />}>
           <Text style={styles.title}>Retailer Redeem Requests</Text>
@@ -117,8 +119,12 @@ const RedemptionRequests = () => {
             <ScrollView contentContainerStyle={styles.list}>
               {requests.map((request) => (
                 <View key={request._id} style={styles.requestItem}>
-                  <Text style={styles.methodText}>{request.method}</Text>
+                  <Text style={styles.methodText}>{request.method} worth ₹{0.02 * request.points}</Text>
                   <Text style={styles.pointsText}>Points: {request.points}</Text>
+                  {request.holderName && <Text style={styles.detailText}>Holder Name: {request.holderName}</Text>}
+                  {request.ifscCode && <Text style={styles.detailText}>IFSC Code: {request.ifscCode}</Text>}
+                  {request.accountNumber && <Text style={styles.detailText}>Account Number: {request.accountNumber}</Text>}
+                  {request.upiNumber && <Text style={styles.detailText}>UPI Number: {request.upiNumber}</Text>}
                   <Text style={styles.dateText}>Date Requested: {format12Hour(request.dateRequested)}</Text>
                   <TouchableOpacity style={styles.approveButton} onPress={() => handleApprove(request._id)}>
                     <Text style={styles.approveButtonText}>Approve</Text>
@@ -197,9 +203,14 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 5,
   },
+  detailText: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 5,
+  },
   dateText: {
     fontSize: 16,
-    color: '#666',
+    color: '#888',
     marginBottom: 10,
   },
   approveButton: {

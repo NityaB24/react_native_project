@@ -5,6 +5,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AWS from 'aws-sdk';
 import { FontAwesome } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 AWS.config.update({
   accessKeyId: `${process.env.EXPO_AWS_ACCESS_KEY_ID}`,
@@ -35,7 +36,7 @@ const TestS3Kyc = () => {
     aadharFront: '',
     aadharBack: '',
     panCardFront: '',
-    gst:''
+    gst: ''
   });
 
   const [imageUris, setImageUris] = useState({
@@ -69,7 +70,7 @@ const TestS3Kyc = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const role = await AsyncStorage.getItem('role');
-      if(role) setStoredRole(role);
+      if (role) setStoredRole(role);
       if (!token) {
         setMessage('No token found');
         return;
@@ -78,10 +79,10 @@ const TestS3Kyc = () => {
       if (role === 'user') {
         endpoint = `${process.env.EXPO_BACKEND}/api/users/kyc/status`;
       } else if (role === 'retailer') {
-          endpoint = `${process.env.EXPO_BACKEND}/api/retailer/kyc/status`;
+        endpoint = `${process.env.EXPO_BACKEND}/api/retailer/kyc/status`;
       } else {
-          console.error('Invalid role');
-          return;
+        console.error('Invalid role');
+        return;
       }
 
       const response = await axios.get(endpoint, {
@@ -112,8 +113,7 @@ const TestS3Kyc = () => {
       } else {
         setMessage('Failed to check KYC status');
       }
-    } catch (error:any) {
-      // console.error('Error checking KYC status:', error);
+    } catch (error) {
       setMessage('Error checking KYC status');
     }
   };
@@ -156,15 +156,16 @@ const TestS3Kyc = () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
+      // aspect: [4, 3],
       quality: 1,
     });
 
     if (!result.canceled && result.assets.length > 0) {
       const filePath = result.assets[0].uri;
       const phoneNumber = kycDetails.phoneNumber.replace(/[^a-zA-Z0-9]/g, '');
+      const email = kycDetails.emailAddress;
       const timestamp = new Date().toISOString();
-      const fileName = `${phoneNumber}_${timestamp}_${imageType}.jpg`;
+      const fileName = `${email}/${timestamp}_${imageType}.jpg`;
       const bucketName = 'verification-files-project';
 
       try {
@@ -174,7 +175,7 @@ const TestS3Kyc = () => {
         const fileUrl = `https://${bucketName}.s3.amazonaws.com/${fileName}`;
         setKycDetails({ ...kycDetails, [imageType]: fileUrl });
         setImageUris({ ...imageUris, [imageType]: fileUrl });
-      } catch (error:any) {
+      } catch (error) {
         console.log('upload error', error);
       }
     }
@@ -184,7 +185,7 @@ const TestS3Kyc = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const role = await AsyncStorage.getItem('role');
-      if(role) setStoredRole(role);
+      if (role) setStoredRole(role);
       if (!token) {
         setMessage('No token found');
         return;
@@ -204,15 +205,10 @@ const TestS3Kyc = () => {
       } else {
         setMessage('Failed to submit KYC request');
       }
-    } catch (error:any) {
-      // console.log(error);
+    } catch (error) {
       setMessage('error');
     }
   };
-
-  if (!hasGalleryPermission) {
-    return <Text style={styles.noAccessText}>No access to internal storage or camera</Text>;
-  }
 
   if (kycStatus === 'approved') {
     return <Text style={styles.success}>Your KYC is approved</Text>;
@@ -230,7 +226,7 @@ const TestS3Kyc = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <LinearGradient colors={['#f8f9fa', '#e0e0e0']} style={styles.safeArea}>
       {successMessage && <Text style={styles.success}>{successMessage}</Text>}
       {kycStatus === 'approved' && (
         <Text style={styles.messagekyc}>Your KYC is approved</Text>
@@ -243,7 +239,7 @@ const TestS3Kyc = () => {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.header}>KYC Submission</Text>
 
-        <View style={styles.inputGroup}>
+        <View style={styles.card}>
           <Text style={styles.label}>Aadhar Number</Text>
           <TextInput
             style={styles.input}
@@ -254,7 +250,7 @@ const TestS3Kyc = () => {
           />
         </View>
 
-        <View style={styles.inputGroup}>
+        <View style={styles.card}>
           <Text style={styles.label}>Name</Text>
           <TextInput
             style={styles.input}
@@ -264,17 +260,17 @@ const TestS3Kyc = () => {
           />
         </View>
 
-        <View style={styles.inputGroup}>
+        <View style={styles.card}>
           <Text style={styles.label}>Current Address</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter Current Address"
+            placeholder="Enter Address"
             value={kycDetails.currentAddress}
             onChangeText={(text) => setKycDetails({ ...kycDetails, currentAddress: text })}
           />
         </View>
 
-        <View style={styles.inputGroup}>
+        <View style={styles.card}>
           <Text style={styles.label}>City</Text>
           <TextInput
             style={styles.input}
@@ -284,7 +280,7 @@ const TestS3Kyc = () => {
           />
         </View>
 
-        <View style={styles.inputGroup}>
+        <View style={styles.card}>
           <Text style={styles.label}>State</Text>
           <TextInput
             style={styles.input}
@@ -294,161 +290,206 @@ const TestS3Kyc = () => {
           />
         </View>
 
-        <View style={styles.inputGroup}>
+        <View style={styles.card}>
           <Text style={styles.label}>Phone Number</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter Phone Number"
             value={kycDetails.phoneNumber}
             onChangeText={(text) => setKycDetails({ ...kycDetails, phoneNumber: text })}
-            keyboardType='number-pad'
+            keyboardType='phone-pad'
           />
         </View>
 
-        <View style={styles.inputGroup}>
+        <View style={styles.card}>
           <Text style={styles.label}>Email Address</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter Email Address"
             value={kycDetails.emailAddress}
             onChangeText={(text) => setKycDetails({ ...kycDetails, emailAddress: text })}
+            keyboardType='email-address'
           />
         </View>
-        <TextInput
+
+        <View style={styles.card}>
+          <Text style={styles.label}>Aadhar Front Image</Text>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={() => uploadImage('aadharFront')}
+          >
+            <FontAwesome name="cloud-upload" size={24} color="white" />
+            <Text style={styles.uploadButtonText}>Upload Aadhar Front</Text>
+          </TouchableOpacity>
+          {imageUris.aadharFront ? (
+            <Image source={{ uri: imageUris.aadharFront }} style={styles.image} />
+          ) : (
+            <Text style={styles.noImageText}>No Image Uploaded</Text>
+          )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.label}>Aadhar Back Image</Text>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={() => uploadImage('aadharBack')}
+          >
+            <FontAwesome name="cloud-upload" size={24} color="white" />
+            <Text style={styles.uploadButtonText}>Upload Aadhar Back</Text>
+          </TouchableOpacity>
+          {imageUris.aadharBack ? (
+            <Image source={{ uri: imageUris.aadharBack }} style={styles.image} />
+          ) : (
+            <Text style={styles.noImageText}>No Image Uploaded</Text>
+          )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.label}>PAN Card Front Image</Text>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={() => uploadImage('panCardFront')}
+          >
+            <FontAwesome name="cloud-upload" size={24} color="white" />
+            <Text style={styles.uploadButtonText}>Upload PAN Card Front</Text>
+          </TouchableOpacity>
+          {imageUris.panCardFront ? (
+            <Image source={{ uri: imageUris.panCardFront }} style={styles.image} />
+          ) : (
+            <Text style={styles.noImageText}>No Image Uploaded</Text>
+          )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.label}>GST Number</Text>
+          <TextInput
             style={styles.input}
             placeholder="Enter GST Number"
             value={kycDetails.gst}
             onChangeText={(text) => setKycDetails({ ...kycDetails, gst: text })}
           />
-
-        <Text style={styles.label}>Aadhar Front</Text>
-        <TouchableOpacity style={styles.imagePicker} onPress={() => uploadImage('aadharFront')}>
-          {imageUris.aadharFront ? (
-            <Image source={{ uri: imageUris.aadharFront }} style={styles.image} />
-          ) : (
-            <FontAwesome name="image" size={24} color="gray" />
-          )}
-        </TouchableOpacity>
-
-        <Text style={styles.label}>Aadhar Back</Text>
-        <TouchableOpacity style={styles.imagePicker} onPress={() => uploadImage('aadharBack')}>
-          {imageUris.aadharBack ? (
-            <Image source={{ uri: imageUris.aadharBack }} style={styles.image} />
-          ) : (
-            <FontAwesome name="image" size={24} color="gray" />
-          )}
-        </TouchableOpacity>
-
-        <Text style={styles.label}>Pan Card Front</Text>
-        <TouchableOpacity style={styles.imagePicker} onPress={() => uploadImage('panCardFront')}>
-          {imageUris.panCardFront ? (
-            <Image source={{ uri: imageUris.panCardFront }} style={styles.image} />
-          ) : (
-            <FontAwesome name="image" size={24} color="gray" />
-          )}
-        </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
-          style={[styles.submitButton, isFormValid ? styles.submitButtonEnabled : styles.submitButtonDisabled]}
+          style={[styles.submitButton, !isFormValid && styles.disabledButton]}
           onPress={handleKycSubmit}
           disabled={!isFormValid}
         >
-          <Text style={styles.submitButtonText}>Submit</Text>
+          <LinearGradient colors={['#2a4853', '#72d9ff']} style={styles.gradientButton}>
+            <Text style={styles.submitButtonText}>Submit KYC</Text>
+          </LinearGradient>
         </TouchableOpacity>
-        {message && <Text style={styles.error}>{message}</Text>}
+
+        {message && <Text style={styles.message}>{message}</Text>}
       </ScrollView>
-    </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   container: {
     padding: 20,
   },
   header: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#333',
     textAlign: 'center',
-  },
-  inputGroup: {
-    marginBottom: 15,
   },
   label: {
     fontSize: 16,
-    marginBottom: 5,
+    fontWeight: 'bold',
+    color: '#555',
   },
   input: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 5,
+    height: 40,
+    borderColor: '#ccc',
     borderWidth: 1,
-    borderColor: '#ced4da',
-  },
-  imagePicker: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 150,
-    backgroundColor: '#e9ecef',
-    marginBottom: 15,
     borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ced4da',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginVertical: 10,
   },
   submitButton: {
-    padding: 15,
+    backgroundColor: '#ff7e5f',
+    paddingVertical: 15,
     borderRadius: 5,
-    alignItems: 'center',
     marginTop: 20,
   },
-  submitButtonEnabled: {
-    backgroundColor: '#007bff',
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#6c757d',
+  gradientButton: {
+    paddingVertical: 15,
+    borderRadius: 5,
+    alignItems: 'center',
   },
   submitButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
-  noAccessText: {
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 18,
-    color: '#dc3545',
+  disabledButton: {
+    backgroundColor: '#d3d3d3',
   },
   success: {
-    color: '#28a745',
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  error: {
-    color: '#dc3545',
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  statusMessage: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  messagekyc: {
     color: 'green',
     fontSize: 18,
     textAlign: 'center',
-    fontWeight: 'bold',
-    marginBottom: 10,
+    marginVertical: 10,
+  },
+  error: {
+    color: 'red',
+    fontSize: 18,
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  uploadButtonText: {
+    color: '#fff',
+    marginLeft: 10,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    marginTop: 10,
+    borderRadius: 5,
+  },
+  noImageText: {
+    marginTop: 10,
+    color: '#777',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  message: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  messagekyc: {
+    color: 'green',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  statusMessage: {
+    color: 'blue',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 

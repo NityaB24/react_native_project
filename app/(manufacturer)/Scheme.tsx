@@ -64,7 +64,7 @@ const Schemes = () => {
     if (!result.canceled && result.assets.length > 0) {
       const filePath = result.assets[0].uri;
       const timestamp = new Date().toISOString();
-      const fileName = `${timestamp}_${imageType}.jpg`;
+      const fileName = `schemes/${timestamp}_${imageType}.jpg`;
       const bucketName = 'verification-files-project';
 
       try {
@@ -80,7 +80,7 @@ const Schemes = () => {
           setKycDetails((prevDetails) => ({ ...prevDetails, [imageType]: fileUrl }));
           setImageUris((prevUris) => ({ ...prevUris, [imageType]: fileUrl }));
         }
-      } catch (error:any) {
+      } catch (error) {
         console.log('upload error', error);
       }
     }
@@ -107,7 +107,7 @@ const Schemes = () => {
       } else {
         setMessage('Failed to upload Schemes');
       }
-    } catch (error:any) {
+    } catch (error) {
       setMessage('Error uploading Scheme');
     }
   };
@@ -140,7 +140,7 @@ const Schemes = () => {
       } else {
         setMessage('Failed to fetch schemes');
       }
-    } catch (error:any) {
+    } catch (error) {
       setMessage('Error fetching schemes');
     }
   };

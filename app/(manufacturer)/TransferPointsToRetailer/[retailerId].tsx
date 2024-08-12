@@ -74,7 +74,7 @@ const TransferPointsToRetailer = () => {
       } else {
         setError('Failed to transfer points');
       }
-    } catch (error:any) {
+    } catch (error) {
       setError('Error transferring points. Please try again.');
     } finally {
       setLoading(false);

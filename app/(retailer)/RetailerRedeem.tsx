@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, ActivityIndicator, StyleSheet, Animated, ScrollView, Alert, } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView, Alert, TextInput,Image,Animated } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RadioButton } from 'react-native-paper';
 
 const RetailerRedeem = () => {
     const [response, setResponse] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
     const [retailerStatus, setRetailerStatus] = useState('');
+    const [upiNumber, setUpiNumber] = useState(''); 
+    const [holderName, setHolderName] = useState('');
+    const [ifscCode, setIfscCode] = useState('');
+    const [accountNumber, setAccountNumber] = useState('');
+    const [selectedMethod, setSelectedMethod] = useState('bank');
+    const [pointsRedeemed, setPointsRedeemed] = useState<number>(0);
+    const [pointstobeRedeemed, setPointstobeRedeemed] = useState<number>(0);
+    const [pointsInput, setPointsInput] = useState<string>('');
+    const [fee, setFee] = useState<number>(0);
 
     useEffect(() => {
         const checkTokenAndUserId = async () => {
@@ -23,22 +32,48 @@ const RetailerRedeem = () => {
                         Authorization: `Bearer ${token}`
                     }
                 });
-                setRetailerStatus(res.data.status); // Assuming status is returned as a string
-            } catch (error:any) {
+                setRetailerStatus(res.data.status);
+            } catch (error) {
                 console.error('Error fetching KYC status:', error);
             }
         };
-        checkTokenAndUserId();
-    }, []);
-    
 
-    const redeemPoints = async (points:number, method:string) => {
+        const fetchPoints = async () => {
+            setLoading(true);
+            try {
+                const token = await AsyncStorage.getItem('token');
+                const retailerId = await AsyncStorage.getItem('loggedId');
+                if (!token || !retailerId) {
+                    console.error('No token or Id found');
+                    return;
+                }
+                const response = await axios.get(`${process.env.EXPO_BACKEND}/api/retailer/points`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                setPointsRedeemed(response.data.pointsRedeemed);
+                setPointstobeRedeemed(response.data.points_to_be_Redeemed);
+            } catch (error) {
+                console.error('Error fetching points:', error);
+                Alert.alert('Error fetching points');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkTokenAndUserId();
+        fetchPoints();
+    }, []);
+
+    const redeemPoints = async (points) => {
         try {
-            if (retailerStatus === 'pending' || retailerStatus ==='rejected' ) {
+            if (retailerStatus === 'pending' || retailerStatus === 'rejected') {
                 Alert.alert('Redemption Not Allowed', 'You cannot redeem points while KYC status is pending or rejected');
                 return;
             }
-    
+
             setLoading(true);
             const token = await AsyncStorage.getItem("token");
             const retailerId = await AsyncStorage.getItem('loggedId');
@@ -46,23 +81,29 @@ const RetailerRedeem = () => {
                 console.error('No token or retailerId found');
                 return;
             }
-            const res = await axios.post(`${process.env.EXPO_BACKEND}/api/retailer/request-redemption`, {
+            
+            const requestBody = {
                 retailerId,
                 points,
-                method
-            }, {
+                method: selectedMethod,
+                holderName: selectedMethod === 'bank' ? holderName : null,
+                ifscCode: selectedMethod === 'bank' ? ifscCode : null,
+                accountNumber: selectedMethod === 'bank' ? accountNumber : null,
+                upiNumber: selectedMethod === 'upi' ? upiNumber : null
+            };
+            
+            const res = await axios.post(`${process.env.EXPO_BACKEND}/api/retailer/request-redemption`, requestBody, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
             setResponse(res.data);
-            setError(null);
             Alert.alert(
                 'Redemption Successful',
-                `${points} points have been redeemed for ${method}`,
+                `${points} points have been redeemed for Direct Bank Transfer`,
                 [{ text: 'OK' }]
             );
-        } catch (err:any) {
+        } catch (err) {
             // console.error('Redemption error:', err);
             Alert.alert('Insufficient Points or Something Went Wrong');
             setResponse(null);
@@ -70,52 +111,127 @@ const RetailerRedeem = () => {
             setLoading(false);
         }
     };
-    
 
-    const handleRedeem = (points:number, method:string) => {
+    const handleRedeem = () => {
+        const points = parseFloat(pointsInput);
+
+        if (points < 10000) {
+            Alert.alert('Invalid Points', 'Please enter points greater than 10,000');
+            return;
+        }
+
+        if (selectedMethod === 'bank' && (!holderName || !ifscCode || !accountNumber)) {
+            Alert.alert('Missing Information', 'Please fill out all bank details');
+            return;
+        } else if (selectedMethod === 'upi' && !upiNumber) {
+            Alert.alert('Missing Information', 'Please fill out the UPI number');
+            return;
+        }
+
         Alert.alert(
             'Confirm Redemption',
-            `Are you sure you want to redeem ${points} points for ${method}?`,
+            `Are you sure you want to redeem ${points} points for Direct Bank Transfer?`,
             [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'OK', onPress: () => redeemPoints(points, method) }
+                { text: 'OK', onPress: () => redeemPoints(points) }
             ],
             { cancelable: false }
         );
     };
 
-    const redemptionOptions = [
-        { method: 'Amazon', points: 1000, image: require('@/app/images/Amazon.png') },
-        { method: 'Google', points: 500, image: require('@/app/images/Google.png') },
-        { method: 'Xbox', points: 300, image: require('@/app/images/Xbox_2.jpg') }
-    ];
+    const handlePointsChange = (text: string) => {
+        const points = parseFloat(text) || 0;
+        setPointsInput(text);
+        setFee(points * 0.02);
+    };
 
     return (
-        <>
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Redeem Points</Text>
-                </View>
-                <ScrollView contentContainerStyle={styles.contentContainer}>
-                    <View style={styles.optionsContainer}>
-                        {redemptionOptions.map((option, index) => (
-                            <Animated.View key={index} style={styles.optionCard}>
-                                <Image source={option.image} style={styles.optionImage} />
-                                <View style={styles.optionDetails}>
-                                    <Text style={styles.optionMethod}>{option.method}</Text>
-                                    <Text style={styles.optionPoints}>Points: {option.points}</Text>
-                                    <TouchableOpacity style={styles.redeemButton} onPress={() => handleRedeem(option.points, option.method)}>
-                                        <Text style={styles.redeemButtonText}>Redeem</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </Animated.View>
-                        ))}
-                    </View>
-                    {loading && <ActivityIndicator size="large" color="#0000ff" />}
-                    {error && <Text style={styles.errorMessage}>{error}</Text>}
-                </ScrollView>
+        <View style={styles.container}>
+            <View style={styles.pointsContainer}>
+                <Text style={styles.pointsText}>Total Points Redeemed: {pointsRedeemed}</Text>
+                <Text style={styles.pointsText}>Points to be Redeemed: {pointstobeRedeemed}</Text>
             </View>
-        </>
+
+            <ScrollView contentContainerStyle={styles.contentContainer}>
+                <View style={styles.radioContainer}>
+                        <View style={styles.radioButton}>
+                            <RadioButton
+                                value="bank"
+                                status={selectedMethod === 'bank' ? 'checked' : 'unchecked'}
+                                onPress={() => setSelectedMethod('bank')}
+                            />
+                            <Text style={styles.radioLabel}>Bank Details</Text>
+                        </View>
+                        <View style={styles.radioButton}>
+                            <RadioButton
+                                value="upi"
+                                status={selectedMethod === 'upi' ? 'checked' : 'unchecked'}
+                                onPress={() => setSelectedMethod('upi')}
+                            />
+                            <Text style={styles.radioLabel}>UPI</Text>
+                        </View>
+                    </View>
+
+                    {selectedMethod === 'bank' && (
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Account Holder Name"
+                                value={holderName}
+                                onChangeText={setHolderName}
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="IFSC Code"
+                                value={ifscCode}
+                                onChangeText={setIfscCode}
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Account Number"
+                                value={accountNumber}
+                                onChangeText={setAccountNumber}
+                                keyboardType="numeric"
+                                maxLength={12}
+                            />
+                        </View>
+                    )}
+
+                    {selectedMethod === 'upi' && (
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="UPI Number"
+                                value={upiNumber}
+                                onChangeText={setUpiNumber}
+                                keyboardType="numeric"
+                                maxLength={10}
+                            />
+                        </View>
+                    )}
+
+                <Animated.View style={styles.optionCard}>
+                <Image source={require('@/app/images/bank.png')} style={styles.optionImage} />
+                </Animated.View>
+
+                <View style={styles.pointsInputContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter Points"
+                        value={pointsInput}
+                        onChangeText={handlePointsChange}
+                        keyboardType="numeric"
+                    />
+                    <Text style={styles.feeText}>{pointsInput} Points Worth: ₹{fee.toFixed(2)}</Text>
+                </View>
+
+                <TouchableOpacity style={styles.redeemButton} onPress={handleRedeem}>
+                    <Text style={styles.redeemButtonText}>Redeem</Text>
+                </TouchableOpacity>
+
+                {loading && <ActivityIndicator size="large" color="#0000ff" />}
+            </ScrollView>
+        </View>
     );
 };
 
@@ -124,33 +240,65 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#f0f0f0',
     },
+    pointsContainer: {
+        alignItems: 'center',
+        padding: 16,
+        backgroundColor: '#1f2937',
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        marginBottom: 10,
+    },
+    pointsText: {
+        fontSize: 20,
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+    },
     contentContainer: {
         alignItems: 'center',
         paddingVertical: 30,
     },
-    header: {
-        padding: 16,
-        backgroundColor: '#1f2937',
-        alignItems: 'center',
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
-        marginBottom:10,
-
-    },
-    headerTitle: {
-        fontSize: 24,
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: '700',
-        color: '#333',
+    inputContainer: {
+        width: '90%',
         marginBottom: 20,
     },
-    optionsContainer: {
+    input: {
+        backgroundColor: '#fff',
+        padding: 15,
+        borderRadius: 5,
+        marginBottom: 10,
+        fontSize: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 2,
+    },
+    pointsInputContainer: {
+        width: '90%',
+        marginBottom: 20,
+    },
+    feeText: {
+        fontSize: 16,
+        color: '#333',
+        marginTop: 5,
+        textAlign: 'center',
+    },
+    redeemButton: {
+        backgroundColor: '#1f2937',
+        paddingVertical: 10,
+        paddingHorizontal: 30,
+        borderRadius: 5,
+    },
+    redeemButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    optionImage: {
         width: '100%',
-        alignItems: 'center',
+        height: 150,
+        borderRadius: 10,
+        marginBottom: 15,
     },
     optionCard: {
         width: '90%',
@@ -165,47 +313,28 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 5,
     },
-    optionImage: {
+    optionsContainer: {
         width: '100%',
-        height: 150,
-        borderRadius: 10,
-        marginBottom: 15,
-    },
-    optionDetails: {
         alignItems: 'center',
     },
-    optionMethod: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#1f2937',
+    radioContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
         marginBottom: 10,
     },
-    optionPoints: {
-        fontSize: 18,
-        color: '#1f2937',
-        marginBottom: 20,
+    radioButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 20,
+        borderColor: 'lightgrey',
+        borderWidth: 1,
+        borderRadius: 10,
+        padding: 8,
     },
-    redeemButton: {
-        backgroundColor: '#1f2937',
-        paddingVertical: 10,
-        paddingHorizontal: 30,
-        borderRadius: 5,
-    },
-    redeemButtonText: {
-        color: '#fff',
+    radioLabel: {
         fontSize: 16,
-        fontWeight: '600',
+        color: '#333',
     },
-    errorMessage: {
-        marginTop: 20,
-        color: 'red',
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    buttonText: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-    }
 });
 
 export default RetailerRedeem;

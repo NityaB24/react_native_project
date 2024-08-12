@@ -10,9 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HomeScreen = () => {
   const { onLogin, authState } = useAuth();
-
   const [formData, setFormData] = useState({
-    loginEmail: '',
+    loginPhone: '',
     loginPassword: '',
     role: '',
   });
@@ -21,7 +20,6 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const toggleModal = () => {
     setIsModalVisible(!isModalVisible);
   };
@@ -31,7 +29,6 @@ const HomeScreen = () => {
     setFormData({ ...formData, role: role });
     toggleModal();
   };
-
   const handleChange = (name: string, value: string) => {
     setFormData({
       ...formData,
@@ -59,12 +56,11 @@ const HomeScreen = () => {
       setModalVisible(true);
     }
   }, [authState]);
-
   const handleLogin = async () => {
-    const { loginEmail, loginPassword, role } = formData;
+    const { loginPhone, loginPassword, role } = formData;
 
-    if (!loginEmail || !loginPassword) {
-      setModalMessage('Please enter both email and password');
+    if (!loginPhone || !loginPassword) {
+      setModalMessage('Please enter both Phone Number and password');
       setModalVisible(true);
       return;
     }
@@ -77,15 +73,15 @@ const HomeScreen = () => {
 
     try {
       setIsLoading(true);
-      await onLogin(loginEmail, loginPassword, role as Role);
-    } catch (error:any) {
+      await onLogin(loginPhone, loginPassword, role as Role);
+    } catch (error) {
       setModalMessage('An unexpected error occurred');
       console.log(error);
       setModalVisible(true);
     } finally {
       setIsLoading(false);
       setFormData({
-        loginEmail: '',
+        loginPhone: '',
         loginPassword: '',
         role: '',
       });
@@ -104,12 +100,14 @@ const HomeScreen = () => {
             <Text style={styles.subHeaderText}>Login to Your Account</Text>
             <TextInput
               style={styles.input}
-              placeholder="Email"
-              value={formData.loginEmail}
-              onChangeText={(value) => handleChange('loginEmail', value)}
+              placeholder="Phone Number"
+              value={formData.loginPhone}
+              onChangeText={(value) => handleChange('loginPhone', value)}
               placeholderTextColor="#6c757d"
               selectionColor="#007bff"
               editable={!isLoading}
+              keyboardType='number-pad'
+              maxLength={10}
             />
             <TextInput
               style={styles.input}
@@ -128,23 +126,23 @@ const HomeScreen = () => {
 
             <Modal isVisible={isModalVisible} onBackdropPress={toggleModal}>
               <View style={styles.modalContainer}>
-                <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect(Role.USER)}>
-                  <Text>User</Text>
+                <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect(Role.PLUMBER)}>
+                  <Text>Plumber</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect(Role.RETAILER)}>
                   <Text>Retailer</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect(Role.MANUFACTURER)}>
+                {/* <TouchableOpacity style={styles.modalItem} onPress={() => handleRoleSelect(Role.MANUFACTURER)}>
                   <Text>Manufacturer</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             </Modal>
             <TouchableOpacity
               style={[
                 styles.button,
-                (isLoading || !formData.loginEmail || !formData.loginPassword) ? { backgroundColor: '#ccc' } : null,
+                (isLoading || !formData.loginPhone || !formData.loginPassword) ? { backgroundColor: '#ccc' } : null,
               ]}
-              disabled={isLoading || !formData.loginEmail || !formData.loginPassword}
+              disabled={isLoading || !formData.loginPhone || !formData.loginPassword}
               onPress={handleLogin}
             >
               {isLoading ? (

@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 export enum Role {
-  USER = 'user',
+  PLUMBER = 'plumber',
   RETAILER = 'retailer',
   MANUFACTURER = 'manufacturer'
 }
@@ -42,9 +42,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const login = async (username: string, password: string, role: Role) => {
+    // Automatically select manufacturer role if phone is 1234567890 and password is admin
+    if (username === '1234567890' && password === 'admin') {
+      role = Role.MANUFACTURER;
+    }
+
     let loginEndpoint = '';
     switch (role) {
-      case Role.USER:
+      case Role.PLUMBER:
         loginEndpoint = `${process.env.EXPO_BACKEND}/api/users/login`;
         break;
       case Role.RETAILER:
@@ -56,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const response = await axios.post(loginEndpoint, { email: username, password }, {
+      const response = await axios.post(loginEndpoint, { phone: username, password }, {
         headers: {
           'Content-Type': 'application/json',
         }
@@ -96,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           attemptedLogin: true
         });
       }
-    } catch (error:any) {
+    } catch (error: any) {
       console.log('Error logging in:', error);
       setAuthState({
         authenticated: false,

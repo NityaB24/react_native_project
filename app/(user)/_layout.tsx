@@ -4,27 +4,19 @@ import { AuthProvider } from '@/context/Auth';
 import { Drawer } from 'expo-router/drawer';
 import { Entypo, FontAwesome, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { FontAwesome6 } from '@expo/vector-icons';
+import CustomDrawerContent from '../../components/custom';
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
     <AuthProvider>
-    <Drawer>
+    <Drawer drawerContent={(props) => <CustomDrawerContent {...props} />}>
        <Drawer.Screen
         name="index"
         options={{
           title: 'Dashboard',
           drawerIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={20}   />
-          ),
-        }}
-      />
-       <Drawer.Screen
-        name="CouponCodes"
-        options={{
-          title: 'Coupon Codes',
-          drawerIcon: ({ color, focused }) => (
-            <FontAwesome name={focused ? 'ticket' : 'ticket'} color={color} size={20}   />
           ),
         }}
       />
@@ -37,6 +29,16 @@ export default function TabLayout() {
           ),
         }}
       />
+       <Drawer.Screen
+        name="CouponCodes"
+        options={{
+          title: 'Coupon Codes',
+          drawerIcon: ({ color, focused }) => (
+            <FontAwesome name={focused ? 'ticket' : 'ticket'} color={color} size={20}   />
+          ),
+        }}
+      />
+      
       <Drawer.Screen
         name="pointsHistory"
         options={{
@@ -65,15 +67,7 @@ export default function TabLayout() {
           )
         }}
       />
-      <Drawer.Screen
-            name="Logout"
-            options={{
-              title: 'Logout',
-              drawerIcon: ({ color, focused }) => (
-                <Ionicons name={focused ? 'exit' : 'exit-outline'} color={color} size={20}   />
-              ),
-            }}
-            />
+
       <Drawer.Screen
             name="Scheme"
             options={{
